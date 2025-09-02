@@ -1,5 +1,5 @@
 # AaronWeather
-Simple app for checking current weather  
+Simple kotlin android app for checking current weather  
 Created to showcase my skills in Android development  
 
 ## Main Features
