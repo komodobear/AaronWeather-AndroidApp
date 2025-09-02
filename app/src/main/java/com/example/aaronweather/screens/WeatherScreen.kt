@@ -79,7 +79,7 @@ fun HomeScreen(
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
 				Text(
-					text = if(locationName.isNotEmpty()) locationName else "Loading...",
+					text = locationName.ifEmpty { "Loading..." },
 					fontSize = 32.sp,
 					fontWeight = FontWeight.Bold,
 					textAlign = TextAlign.Center,

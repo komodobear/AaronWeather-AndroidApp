@@ -83,7 +83,6 @@ fun MainScreen(
 
 	val isRefreshing = weatherVM.isRefreshing
 
-	var permissionDenied by remember { mutableStateOf(false) }
 	val hasLocationPermission = locationUtils.hasLocationPermission(context)
 
 	val placesClient = remember { Places.createClient(context) }
@@ -95,7 +94,6 @@ fun MainScreen(
 		val coarseLocationGranted = perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
 		if(fineLocationGranted || coarseLocationGranted) {
-			permissionDenied = false
 			locationUtils.requestLocationUpdates(weatherVM)
 		}
 	}
