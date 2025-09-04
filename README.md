@@ -26,8 +26,6 @@ Created to showcase my skills in Android development
 <p align="center">
   <img src="screenshots/screen_1.jpg" alt="Main Screen" width="250"/>
   <img src="screenshots/screen_2.jpg" alt="Drawer" width="250"/>
-</p>
-<p align="center">
   <img src="screenshots/screen_3.jpg" alt="Main Screen" width="250"/>
   <img src="screenshots/screen_4.jpg" alt="Main Screen" width="250"/>
 </p>
