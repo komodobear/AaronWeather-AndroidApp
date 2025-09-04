@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.aaronweather"
+    namespace = "com.komodobear.aaronweather"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.aaronweather"
+        applicationId = "com.komodobear.aaronweather"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
