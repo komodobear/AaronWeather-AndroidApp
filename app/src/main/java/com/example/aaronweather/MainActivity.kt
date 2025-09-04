@@ -52,12 +52,14 @@ fun SystemAppearance(
 		if(weatherVM.weatherState.weatherInfo?.currentWeatherData?.weatherType?.textColor == Color.White) false else true
 	val color =
 		weatherVM.weatherState.weatherInfo?.currentWeatherData?.weatherType?.bgColor ?: Color.Gray
+	val navColor =
+		weatherVM.weatherState.weatherInfo?.currentWeatherData?.weatherType?.darkBgColor ?: Color.DarkGray
 
 	SideEffect {
 		WindowCompat.getInsetsController(window, view).apply {
 			isAppearanceLightStatusBars = darkIcon
 		}
 		window.statusBarColor = color.toArgb()
-		window.navigationBarColor = color.toArgb()
+		window.navigationBarColor = navColor.toArgb()
 	}
 }
