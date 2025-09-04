@@ -1,4 +1,4 @@
-package com.example.aaronweather.screens
+package com.komodobear.aaronweather.screens
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -40,12 +40,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.aaronweather.R
-import com.example.aaronweather.SystemAppearance
-import com.example.aaronweather.ThemeColors
-import com.example.aaronweather.WeatherVM
-import com.example.aaronweather.weather.WeatherData
-import com.example.aaronweather.weather.WeatherState
+import com.komodobear.aaronweather.R
+import com.komodobear.aaronweather.SystemAppearance
+import com.komodobear.aaronweather.ThemeColors
+import com.komodobear.aaronweather.WeatherVM
+import com.komodobear.aaronweather.weather.WeatherData
+import com.komodobear.aaronweather.weather.WeatherState
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
