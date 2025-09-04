@@ -9,7 +9,6 @@ Created to showcase my skills in Android development
 - State handling with loading animation
 - Mapping DTO → domain models
 - Theme adapted to the current weather
-- Dependency injection with Hilt
 - Pull to refresh support
 
 ## Built with
