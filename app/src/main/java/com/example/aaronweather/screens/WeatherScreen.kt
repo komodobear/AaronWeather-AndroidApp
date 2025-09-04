@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.aaronweather.R
+import com.example.aaronweather.SystemAppearance
 import com.example.aaronweather.ThemeColors
 import com.example.aaronweather.WeatherVM
 import com.example.aaronweather.weather.WeatherData
@@ -63,6 +64,8 @@ fun HomeScreen(
 		bgColor = state.weatherInfo?.currentWeatherData?.weatherType?.bgColor ?: Color.Gray,
 		darkBgColor = state.weatherInfo?.currentWeatherData?.weatherType?.bgColor ?: Color.DarkGray,
 	)
+
+	SystemAppearance(weatherVM)
 
 	state.weatherInfo?.currentWeatherData?.let { data ->
 
