@@ -2,11 +2,11 @@ package com.komodobear.aaronweather.weather
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.komodobear.aaronweather.Resource
+import com.komodobear.aaronweather.Result
 import javax.inject.Inject
 
 interface WeatherRepository {
-	suspend fun getWeatherData(lat: Double, long: Double): Resource<WeatherInfo>
+	suspend fun getWeatherData(lat: Double, long: Double): Result<WeatherInfo>
 }
 
 class WeatherRepositoryImpl @Inject constructor(
@@ -14,9 +14,9 @@ class WeatherRepositoryImpl @Inject constructor(
 ): WeatherRepository {
 
 	@RequiresApi(Build.VERSION_CODES.O)
-	override suspend fun getWeatherData(lat: Double, long: Double): Resource<WeatherInfo> {
+	override suspend fun getWeatherData(lat: Double, long: Double): Result<WeatherInfo> {
 		return try {
-			Resource.Success(
+			Result.Success(
 				data = api.getWeatherData(
 					lat = lat,
 					long = long
@@ -24,7 +24,7 @@ class WeatherRepositoryImpl @Inject constructor(
 			)
 		} catch(e: Exception) {
 			e.printStackTrace()
-			Resource.Error(e.message ?: "An unknown error occurred")
+			Result.Error(e.message ?: "An unknown error occurred")
 		}
 	}
 

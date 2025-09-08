@@ -12,15 +12,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.komodobear.aaronweather.location.LocationData
-import com.komodobear.aaronweather.location.LocationUtils
-import com.komodobear.aaronweather.weather.WeatherRepository
-import com.komodobear.aaronweather.weather.WeatherState
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.komodobear.aaronweather.location.LocationData
+import com.komodobear.aaronweather.location.LocationUtils
+import com.komodobear.aaronweather.weather.WeatherRepository
+import com.komodobear.aaronweather.weather.WeatherState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -129,7 +129,7 @@ class WeatherVM @Inject constructor(
 			try {
 				when(val result =
 					repository.getWeatherData(location.latitude, location.longitude)) {
-					is Resource.Success -> {
+					is Result.Success -> {
 						weatherState = weatherState.copy(
 							weatherInfo = result.data,
 							isLoading = false,
@@ -138,7 +138,7 @@ class WeatherVM @Inject constructor(
 						Log.d("WeatherVM", "fetchWeatherInfo")
 					}
 
-					is Resource.Error -> {
+					is Result.Error -> {
 						weatherState = weatherState.copy(
 							weatherInfo = null,
 							isLoading = false,

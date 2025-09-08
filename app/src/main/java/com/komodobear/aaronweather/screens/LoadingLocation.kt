@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
-import com.komodobear.aaronweather.Screen
+import com.komodobear.aaronweather.screens.Screen
 import com.komodobear.aaronweather.ThemeColors
 import com.komodobear.aaronweather.WeatherVM
 

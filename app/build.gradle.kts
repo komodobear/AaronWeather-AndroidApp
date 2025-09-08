@@ -53,42 +53,43 @@ android {
 }
 
 dependencies {
+//  places api
+    implementation(libs.places)
+    implementation(libs.maps.compose)
 
-    //places api
-    implementation("com.google.android.libraries.places:places:4.4.1")
-    implementation("com.google.maps.android:maps-compose:6.6.0")
+//  hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
+    kapt(libs.androidx.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
-    //hilt
-    implementation (libs.hilt.android)
-    kapt (libs.hilt.android.compiler)
-    implementation (libs.androidx.hilt.lifecycle.viewmodel.compose)
-    kapt (libs.androidx.hilt.compiler)
-    implementation (libs.androidx.hilt.navigation.compose)
-
-    //retrofit
-    implementation (libs.retrofit)
-    implementation (libs.converter.moshi)
+//  retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.moshi)
     implementation(libs.converter.gson)
-    implementation (libs.logging.interceptor)
+    implementation(libs.logging.interceptor)
 
-    implementation (libs.play.services.location)
+//  location
+    implementation(libs.play.services.location)
 
-    implementation(libs.ui)
-    implementation(libs.androidx.lifecycle.runtime.ktx.v270)
-    implementation("com.airbnb.android:lottie-compose:6.6.6")
-    implementation(libs.androidx.activity.compose.v190)
-    implementation (libs.androidx.material)
-    implementation (libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.navigation.compose)
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+//  UI
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
+    implementation(libs.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material)
     implementation(libs.androidx.material3)
+    implementation(libs.lottie.compose)
+    implementation(libs.androidx.navigation.compose)
+
+//  core / lifecycle
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+//  test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
