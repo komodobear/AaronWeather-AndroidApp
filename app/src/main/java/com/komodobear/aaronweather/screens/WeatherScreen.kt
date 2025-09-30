@@ -1,6 +1,7 @@
 package com.komodobear.aaronweather.screens
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,11 +30,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
@@ -53,19 +57,31 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen(
+fun WeatherScreen(
 	weatherVM: WeatherVM
 ) {
 	val state = weatherVM.weatherState
 	val locationName = weatherVM.locationName
 
+	SystemAppearance(weatherVM)
+
+	WeatherContent(
+		state = state,
+		locationName = locationName
+	) // testable composable
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WeatherContent(
+	state: WeatherState,
+	locationName: String,
+) {
 	val themeColors = ThemeColors(
 		textColor = state.weatherInfo?.currentWeatherData?.weatherType?.textColor ?: Color.White,
 		bgColor = state.weatherInfo?.currentWeatherData?.weatherType?.bgColor ?: Color.Gray,
 		darkBgColor = state.weatherInfo?.currentWeatherData?.weatherType?.bgColor ?: Color.DarkGray,
 	)
-
-	SystemAppearance(weatherVM)
 
 	state.weatherInfo?.currentWeatherData?.let { data ->
 
@@ -87,6 +103,7 @@ fun HomeScreen(
 					fontWeight = FontWeight.Bold,
 					textAlign = TextAlign.Center,
 					color = themeColors.textColor,
+					modifier = Modifier.testTag("locationName")
 				)
 
 				Spacer(modifier = Modifier.height(8.dp))
@@ -118,6 +135,7 @@ fun HomeScreen(
 						fontSize = 32.sp,
 						fontWeight = FontWeight.Bold,
 						color = themeColors.textColor,
+						modifier = Modifier.testTag("temperature")
 					)
 				}
 
@@ -127,6 +145,7 @@ fun HomeScreen(
 					text = data.weatherType.weatherDesc,
 					fontSize = 26.sp,
 					color = themeColors.textColor,
+					modifier = Modifier.testTag("weatherType")
 				)
 
 				Spacer(modifier = Modifier.height(32.dp))
@@ -171,17 +190,22 @@ fun HomeScreen(
 						text = "Min: $minTemp°C",
 						fontSize = 20.sp,
 						color = themeColors.textColor,
+						modifier = Modifier.testTag("minTemp")
 					)
 					Spacer(modifier = Modifier.padding(horizontal = 8.dp))
 					Text(
 						text = "Max: $maxTemp°C",
 						fontSize = 20.sp,
 						color = themeColors.textColor,
+						modifier = Modifier.testTag("maxTemp")
 					)
 				}
 
+				val time = data.time.hour
+
 				HourCard(
 					state = state,
+					hour = time,
 					modifier = Modifier
 						.padding(vertical = 16.dp)
 						.fillMaxWidth()
@@ -190,7 +214,7 @@ fun HomeScreen(
 		}
 	}
 
-	if(weatherVM.weatherState.isLoading) {
+	if(state.isLoading) {
 
 		Box(
 			modifier = Modifier
@@ -209,24 +233,28 @@ fun HomeScreen(
 			CircularProgressIndicator(
 				modifier = Modifier
 					.align(Alignment.Center)
-					.size(36.dp),
-				color = themeColors.textColor
+					.size(36.dp)
+					.testTag("loading"),
+				color = themeColors.textColor,
 			)
 		}
 	}
-	weatherVM.weatherState.error?.let { error ->
+	state.error?.let { error ->
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
 				.verticalScroll(rememberScrollState())
 				.background(themeColors.bgColor)
 		) {
+			Log.d("WeatherScreen", "Error: $error")
+
 			Text(
 				text = error,
 				fontSize = 16.sp,
 				textAlign = TextAlign.Center,
 				modifier = Modifier
-					.align(Alignment.Center),
+					.align(Alignment.Center)
+					.testTag("error"),
 				color = themeColors.textColor,
 			)
 		}
@@ -237,6 +265,7 @@ fun HomeScreen(
 @Composable
 fun HourCard(
 	state: WeatherState,
+	hour: Int,
 	modifier: Modifier = Modifier
 ) {
 	val themeColors = ThemeColors(
@@ -247,6 +276,15 @@ fun HourCard(
 	)
 
 	state.weatherInfo?.weatherDataPerDay?.get(0)?.let { data ->
+
+		val listState = rememberLazyListState()
+
+		LaunchedEffect(hour) {
+			val rowIndex = data.indexOfFirst { it.time.hour >= hour }
+			if(rowIndex >= 0) {
+				listState.scrollToItem(rowIndex)
+			}
+		}
 
 		Card(
 			modifier = modifier,
@@ -271,6 +309,7 @@ fun HourCard(
 				Spacer(modifier = Modifier.height(12.dp))
 
 				LazyRow(
+					state = listState,
 					horizontalArrangement = Arrangement.SpaceBetween,
 					modifier = Modifier.fillMaxWidth()
 				) {

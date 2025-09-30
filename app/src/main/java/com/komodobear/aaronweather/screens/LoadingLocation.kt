@@ -19,14 +19,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
-import com.komodobear.aaronweather.screens.Screen
 import com.komodobear.aaronweather.ThemeColors
 import com.komodobear.aaronweather.WeatherVM
 
@@ -36,9 +35,8 @@ fun LoadingScreen(
 	weatherVM: WeatherVM
 ) {
 
-	val isNetworkAvailable = weatherVM.isNetworkAvaible.collectAsState()
+	val isNetworkAvailable = weatherVM.isNetworkAvailable.collectAsState()
 	val userLocation = weatherVM.userLocation.collectAsState()
-	val context = LocalContext.current
 
 	val themeColors = ThemeColors(
 		textColor = weatherVM.weatherState.weatherInfo?.currentWeatherData?.weatherType?.textColor
@@ -64,18 +62,12 @@ fun LoadingScreen(
 	}
 
 	LaunchedEffect(userLocation.value) {
+		if (!isNetworkAvailable.value) return@LaunchedEffect
 
-		if(! isNetworkAvailable.value) return@LaunchedEffect
-
-		if(userLocation.value == null) {
-			Log.d("LoadingScreen", "LoadWeatherInfo")
-			weatherVM.loadWeatherInfo(context)
-		} else {
+		if (userLocation.value != null) {
 			navController.navigate(Screen.HomeScreen.route) {
 				Log.d("LoadingScreen", "Navigating to HomeScreen")
-				popUpTo(Screen.LoadingScreen.route) {
-					inclusive = true
-				}
+				popUpTo(Screen.LoadingScreen.route) { inclusive = true }
 				launchSingleTop = true
 			}
 		}
@@ -92,7 +84,8 @@ fun LoadingScreen(
 				color = themeColors.textColor,
 				modifier = Modifier
                     .align(Alignment.Center)
-                    .padding(32.dp),
+                    .padding(32.dp)
+					.testTag("connection error"),
 				textAlign = TextAlign.Center,
 			)
 		} else {

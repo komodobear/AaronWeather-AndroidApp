@@ -7,21 +7,30 @@ import android.content.pm.PackageManager
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.komodobear.aaronweather.WeatherVM
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.komodobear.aaronweather.WeatherVM
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class LocationUtils(val context: Context) {
+interface LocationUtilsInterface {
+	fun requestLocationUpdates(weatherVM: WeatherVM)
+	fun hasLocationPermission(context: Context): Boolean
+}
+
+class LocationUtils @Inject constructor(
+	@ApplicationContext context: Context
+): LocationUtilsInterface {
 
 	private val _fusedLocationClient: FusedLocationProviderClient =
 		LocationServices.getFusedLocationProviderClient(context)
 
 	@SuppressLint("MissingPermission")
-	fun requestLocationUpdates(weatherVM: WeatherVM) {
+	override fun requestLocationUpdates(weatherVM: WeatherVM) {
 
 		val locationCallback = object: LocationCallback() {
 
@@ -34,7 +43,6 @@ class LocationUtils(val context: Context) {
 					Log.d("LocationUtils", "Location updated: $location")
 
 					weatherVM.updateLocation(location)
-					weatherVM.fetchWeatherInfo(location)
 
 					_fusedLocationClient.removeLocationUpdates(this)
 				} ?: kotlin.run {
@@ -47,23 +55,22 @@ class LocationUtils(val context: Context) {
 		).build()
 
 		_fusedLocationClient.requestLocationUpdates(
-			locationRequest,
-			locationCallback,
-			Looper.getMainLooper()
+			locationRequest, locationCallback, Looper.getMainLooper()
 		)
 	}
 
-	fun hasLocationPermission(context: Context): Boolean {
-		return (
-				ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-						== PackageManager.PERMISSION_GRANTED
-						&&
-						ContextCompat.checkSelfPermission(
-							context,
-							Manifest.permission.ACCESS_COARSE_LOCATION
-						)
-						== PackageManager.PERMISSION_GRANTED
-				)
+	override fun hasLocationPermission(context: Context): Boolean {
+		val fine = ContextCompat.checkSelfPermission(
+			context,
+			Manifest.permission.ACCESS_FINE_LOCATION
+		) == PackageManager.PERMISSION_GRANTED
+
+		val coarse = ContextCompat.checkSelfPermission(
+			context,
+			Manifest.permission.ACCESS_COARSE_LOCATION
+		) == PackageManager.PERMISSION_GRANTED
+
+		return fine || coarse
 	}
 
 }

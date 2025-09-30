@@ -1,5 +1,7 @@
 package com.komodobear.aaronweather.di
 
+import com.komodobear.aaronweather.location.LocationUtils
+import com.komodobear.aaronweather.location.LocationUtilsInterface
 import com.komodobear.aaronweather.weather.WeatherRepository
 import com.komodobear.aaronweather.weather.WeatherRepositoryImpl
 import dagger.Binds
@@ -16,4 +18,10 @@ abstract class RepositoryModule {
 	abstract fun bindWeatherRepository(
 		weatherRepositoryImpl: WeatherRepositoryImpl
 	): WeatherRepository
+
+	@Binds
+	@Singleton
+	abstract fun bindLocationUtils(
+		locationUtils: LocationUtils
+	): LocationUtilsInterface
 }

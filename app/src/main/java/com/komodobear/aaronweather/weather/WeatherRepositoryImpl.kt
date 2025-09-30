@@ -3,14 +3,18 @@ package com.komodobear.aaronweather.weather
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.komodobear.aaronweather.Result
+import java.time.Clock
 import javax.inject.Inject
 
 interface WeatherRepository {
 	suspend fun getWeatherData(lat: Double, long: Double): Result<WeatherInfo>
 }
 
-class WeatherRepositoryImpl @Inject constructor(
-	private val api: WeatherApi
+class WeatherRepositoryImpl
+@RequiresApi(Build.VERSION_CODES.O)
+@Inject constructor(
+	private val api: WeatherApi,
+	private val clock: Clock = Clock.systemDefaultZone()
 ): WeatherRepository {
 
 	@RequiresApi(Build.VERSION_CODES.O)
@@ -20,7 +24,7 @@ class WeatherRepositoryImpl @Inject constructor(
 				data = api.getWeatherData(
 					lat = lat,
 					long = long
-				).toWeatherInfo()
+				).toWeatherInfo(clock)
 			)
 		} catch(e: Exception) {
 			e.printStackTrace()

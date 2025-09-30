@@ -15,13 +15,16 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.komodobear.aaronweather.location.LocationUtils
+import com.komodobear.aaronweather.location.LocationUtilsInterface
 import com.komodobear.aaronweather.screens.MainScreen
 import com.komodobear.aaronweather.ui.theme.WeatherAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity: ComponentActivity() {
+
+	@Inject lateinit var locationUtils: LocationUtilsInterface
 
 	@RequiresApi(Build.VERSION_CODES.O)
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +34,6 @@ class MainActivity: ComponentActivity() {
 
 		setContent {
 			val weatherVM: WeatherVM = hiltViewModel()
-			val locationUtils = LocationUtils(context = this)
 			val navController = rememberNavController()
 
 			WeatherAppTheme(weatherVM = weatherVM) {

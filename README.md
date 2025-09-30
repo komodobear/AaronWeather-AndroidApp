@@ -10,6 +10,7 @@ Created to showcase my skills in Android development
 - Mapping DTO → domain models
 - Theme adapted to the current weather
 - Pull to refresh support
+- Fully tested with unit, UI, and end-to-end tests
 
 ## Built with
 - Kotlin
@@ -21,9 +22,19 @@ Created to showcase my skills in Android development
 - Retrofit (Weather API and Places API)
 - Coroutines & Flow
 
+## Testing
+
+- Unit tests: mappers, repository
+- ViewModel tests: location & weather state updates
+- UI tests (Compose): screens, loading, errors
+- End-to-end: full weather flow with MockWebServer
+- Tools: Kotlin, Compose, Hilt, MockK, Retrofit
+
 ## Download
 
 [Download Aaron Weather APK](https://github.com/komodobear/AaronWeather-AndroidApp/releases/latest)
+
+Spotter-Android-App
 
 ## Screenshots
 <p align="center">

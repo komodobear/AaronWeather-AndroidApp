@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.komodobear.aaronweather.screens.Screen
 import com.komodobear.aaronweather.WeatherVM
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -24,7 +23,7 @@ fun Navigation(
 		}
 
 		composable(Screen.HomeScreen.route) {
-			HomeScreen(weatherVM)
+			WeatherScreen(weatherVM)
 		}
 	}
 }

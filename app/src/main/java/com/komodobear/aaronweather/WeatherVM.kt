@@ -18,7 +18,7 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.komodobear.aaronweather.location.LocationData
-import com.komodobear.aaronweather.location.LocationUtils
+import com.komodobear.aaronweather.location.LocationUtilsInterface
 import com.komodobear.aaronweather.weather.WeatherRepository
 import com.komodobear.aaronweather.weather.WeatherState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,7 +37,8 @@ import javax.inject.Inject
 @HiltViewModel
 class WeatherVM @Inject constructor(
 	private val repository: WeatherRepository,
-	private val locationUtils: LocationUtils,
+	private val locationUtils: LocationUtilsInterface,
+	private val placesClient: PlacesClient,
 	@ApplicationContext private val context: Context
 ): ViewModel() {
 
@@ -45,7 +46,7 @@ class WeatherVM @Inject constructor(
 	val userLocation: StateFlow<LocationData?> = _userLocation.asStateFlow()
 
 	private val _isNetworkAvailable = MutableStateFlow(false)
-	val isNetworkAvaible: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+	val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
 
 	var isRefreshing by mutableStateOf(false)
 		private set
@@ -159,7 +160,6 @@ class WeatherVM @Inject constructor(
 	}
 
 	fun fetchPredictions(
-		client: PlacesClient,
 		query: String,
 		onResult: (List<AutocompletePrediction>) -> Unit
 	) {
@@ -168,7 +168,7 @@ class WeatherVM @Inject constructor(
 				val request = FindAutocompletePredictionsRequest.builder()
 					.setQuery(query)
 					.build()
-				val response = client.findAutocompletePredictions(request).await()
+				val response = placesClient.findAutocompletePredictions(request).await()
 				onResult(response.autocompletePredictions)
 			} catch(e: Exception) {
 				Log.d("WeatherVM", "fetchPredictions failed: ${e.message}")
@@ -180,7 +180,6 @@ class WeatherVM @Inject constructor(
 	}
 
 	fun fetchPlacesDetails(
-		client: PlacesClient,
 		placeId: String,
 		onResult: (LocationData) -> Unit
 	) {
@@ -189,7 +188,7 @@ class WeatherVM @Inject constructor(
 				val placeFields = listOf(Place.Field.LAT_LNG)
 				val request = FetchPlaceRequest.newInstance(placeId, placeFields)
 
-				val response = client.fetchPlace(request).await()
+				val response = placesClient.fetchPlace(request).await()
 				response.place.latLng?.let { latLng ->
 					val location = LocationData(
 						latitude = latLng.latitude,

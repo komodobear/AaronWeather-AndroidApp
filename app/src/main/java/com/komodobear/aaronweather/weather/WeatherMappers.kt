@@ -2,6 +2,7 @@ package com.komodobear.aaronweather.weather
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import java.time.Clock
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -46,12 +47,13 @@ fun WeatherDataDto.toWeatherDataMap(timezone: ZoneId): Map<Int, List<WeatherData
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun WeatherDto.toWeatherInfo(): WeatherInfo {
+fun WeatherDto.toWeatherInfo(clock: Clock): WeatherInfo {
 
 	val timezoneId = ZoneId.of(timezone)
 	val weatherDataMap = weatherData.toWeatherDataMap(timezoneId)
 
-	val currentTimeInLocation = ZonedDateTime.now(timezoneId)
+	val currentTimeInLocation = ZonedDateTime.now(clock).withZoneSameInstant(timezoneId)
+
 	val currentWeatherData = weatherDataMap[0]?.find { data ->
 		data.time.toLocalDate() == currentTimeInLocation.toLocalDate() &&
 				data.time.hour == currentTimeInLocation.hour

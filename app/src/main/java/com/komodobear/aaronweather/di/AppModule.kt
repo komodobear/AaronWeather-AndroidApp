@@ -1,18 +1,19 @@
 package com.komodobear.aaronweather.di
 
 import android.app.Application
-import android.content.Context
-import com.komodobear.aaronweather.location.LocationUtils
+import android.os.Build
+import androidx.annotation.RequiresApi
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.komodobear.aaronweather.BuildConfig
 import com.komodobear.aaronweather.weather.WeatherApi
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.time.Clock
 import javax.inject.Singleton
 
 @Module
@@ -29,17 +30,19 @@ object AppModule {
             .create(WeatherApi::class.java)
     }
 
-    @Provides
+    @RequiresApi(Build.VERSION_CODES.O)
+	@Provides
     @Singleton
-    fun provideFusedLocationProviderClient(app: Application): FusedLocationProviderClient {
-        return LocationServices.getFusedLocationProviderClient(app)
+    fun provideClock(): Clock {
+        return Clock.systemDefaultZone()
     }
 
     @Provides
     @Singleton
-    fun provideLocationUtils(
-        @ApplicationContext context: Context
-    ): LocationUtils {
-        return LocationUtils(context)
+    fun providePlacesClient(app: Application): PlacesClient {
+        if (!Places.isInitialized()) {
+            Places.initialize(app, BuildConfig.API_KEY)
+        }
+        return Places.createClient(app)
     }
 }

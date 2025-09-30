@@ -51,13 +51,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.komodobear.aaronweather.ThemeColors
 import com.komodobear.aaronweather.WeatherVM
 import com.komodobear.aaronweather.location.LocationData
-import com.komodobear.aaronweather.location.LocationUtils
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.AutocompletePrediction
-import com.google.android.libraries.places.api.net.PlacesClient
+import com.komodobear.aaronweather.location.LocationUtilsInterface
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -66,7 +64,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(
 	weatherVM: WeatherVM,
 	navController: NavHostController,
-	locationUtils: LocationUtils,
+	locationUtils: LocationUtilsInterface,
 ) {
 	val themeColors = ThemeColors(
 		textColor = weatherVM.weatherState.weatherInfo?.currentWeatherData?.weatherType?.textColor
@@ -85,8 +83,6 @@ fun MainScreen(
 
 	val hasLocationPermission = locationUtils.hasLocationPermission(context)
 
-	val placesClient = remember { Places.createClient(context) }
-
 	val permissionLauncher = rememberLauncherForActivityResult(
 		ActivityResultContracts.RequestMultiplePermissions()
 	) { perms ->
@@ -99,13 +95,15 @@ fun MainScreen(
 	}
 
 	LaunchedEffect(Unit) {
-		if(! hasLocationPermission) {
+		if(!hasLocationPermission) {
 			permissionLauncher.launch(
 				arrayOf(
 					Manifest.permission.ACCESS_FINE_LOCATION,
 					Manifest.permission.ACCESS_COARSE_LOCATION
 				)
 			)
+		}else{
+			locationUtils.requestLocationUpdates(weatherVM)
 		}
 	}
 
@@ -135,7 +133,6 @@ fun MainScreen(
 		drawerState = drawerState,
 		drawerContent = {
 			LocationSearchDrawer(
-				placesClient = placesClient,
 				onLocationSelected = { latLng ->
 					weatherVM.updateLocation(latLng)
 					Log.d("MainScreen", "Drawer: ${latLng.latitude}, ${latLng.longitude}")
@@ -177,7 +174,6 @@ fun MainScreen(
 
 @Composable
 fun LocationSearchDrawer(
-	placesClient: PlacesClient,
 	onLocationSelected: (LocationData) -> Unit,
 	weatherVM: WeatherVM
 ) {
@@ -209,7 +205,7 @@ fun LocationSearchDrawer(
 						}
 
 						text.length >= 2 -> {
-							weatherVM.fetchPredictions(placesClient, text) { results ->
+							weatherVM.fetchPredictions( text) { results ->
 								predictions = results
 							}
 						}
@@ -258,7 +254,6 @@ fun LocationSearchDrawer(
 						itemsIndexed(predictions) { index, prediction ->
 							PredictionItem(prediction, weatherVM) {
 								weatherVM.fetchPlacesDetails(
-									placesClient,
 									it.placeId
 								) { latlng ->
 									onLocationSelected(latlng)
