@@ -34,8 +34,6 @@ Created to showcase my skills in Android development
 
 [Download Aaron Weather APK](https://github.com/komodobear/AaronWeather-AndroidApp/releases/latest)
 
-Spotter-Android-App
-
 ## Screenshots
 <p align="center">
   <img src="screenshots/screen_1.jpg" alt="Main Screen" width="250"/>
