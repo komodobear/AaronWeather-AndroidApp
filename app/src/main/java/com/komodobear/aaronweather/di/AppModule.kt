@@ -6,12 +6,14 @@ import androidx.annotation.RequiresApi
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.komodobear.aaronweather.BuildConfig
+import com.komodobear.aaronweather.geocoding.GeocodingApi
 import com.komodobear.aaronweather.weather.WeatherApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.Clock
 import javax.inject.Singleton
@@ -28,6 +30,16 @@ object AppModule {
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(WeatherApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeocodingApi(): GeocodingApi {
+        return Retrofit.Builder()
+            .baseUrl("https://maps.googleapis.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(GeocodingApi::class.java)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

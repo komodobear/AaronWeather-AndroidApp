@@ -1,8 +1,12 @@
 package com.komodobear.aaronweather.e2e
 
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.komodobear.aaronweather.NetworkManagerInterface
 import com.komodobear.aaronweather.di.AppModule
 import com.komodobear.aaronweather.di.RepositoryModule
+import com.komodobear.aaronweather.geocoding.GeoCodingRepositoryImpl
+import com.komodobear.aaronweather.geocoding.GeocodingApi
+import com.komodobear.aaronweather.geocoding.GeocodingRepository
 import com.komodobear.aaronweather.location.LocationUtilsInterface
 import com.komodobear.aaronweather.weather.WeatherApi
 import com.komodobear.aaronweather.weather.WeatherRepository
@@ -19,6 +23,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.mockwebserver.MockWebServer
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.Clock
 import java.time.Instant
@@ -54,12 +59,18 @@ object TestAppModule {
 			)
 			.client(okHttpClient)
 			.addConverterFactory(MoshiConverterFactory.create())
+			.addConverterFactory(GsonConverterFactory.create())
 			.build()
 
 	@Provides
 	@Singleton
 	fun provideWeatherApi(retrofit: Retrofit): WeatherApi =
 		retrofit.create(WeatherApi::class.java)
+
+	@Provides
+	@Singleton
+	fun provideGeocodingApi(retrofit: Retrofit): GeocodingApi =
+		retrofit.create(GeocodingApi::class.java)
 
 	@Provides
 	@Singleton
@@ -79,6 +90,9 @@ object TestAppModule {
 		return mockk<PlacesClient>(relaxed = true)
 	}
 
+	@Provides
+	@Singleton
+	fun provideFakeNetworkManager(): NetworkManagerInterface = FakeNetworkManager()
 }
 
 @Module
@@ -97,4 +111,10 @@ object TestAppModule {
 	abstract fun bindLocationUtils(
 		locationUtils: FakeLocationUtils
 	): LocationUtilsInterface
+
+	@Binds
+	@Singleton
+	abstract fun bindGeocodingApi(
+		geocodingRepository: GeoCodingRepositoryImpl
+	): GeocodingRepository
 }

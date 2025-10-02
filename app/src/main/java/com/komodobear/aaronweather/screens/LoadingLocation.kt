@@ -56,11 +56,6 @@ fun LoadingScreen(
 		}
 	}
 
-	LaunchedEffect(Unit) {
-		weatherVM.checkNetworkAvailability()
-		Log.d("LoadingScreen", "CheckNetworkAvailability")
-	}
-
 	LaunchedEffect(userLocation.value) {
 		if (!isNetworkAvailable.value) return@LaunchedEffect
 

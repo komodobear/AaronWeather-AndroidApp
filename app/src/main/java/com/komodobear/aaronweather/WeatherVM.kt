@@ -1,11 +1,6 @@
 package com.komodobear.aaronweather
 
 import android.content.Context
-import android.location.Geocoder
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +12,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.komodobear.aaronweather.geocoding.GeocodingRepository
 import com.komodobear.aaronweather.location.LocationData
 import com.komodobear.aaronweather.location.LocationUtilsInterface
 import com.komodobear.aaronweather.weather.WeatherRepository
@@ -31,7 +27,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,14 +34,15 @@ class WeatherVM @Inject constructor(
 	private val repository: WeatherRepository,
 	private val locationUtils: LocationUtilsInterface,
 	private val placesClient: PlacesClient,
+	private val networkManager: NetworkManagerInterface,
+	private val geocodingRepository: GeocodingRepository,
 	@ApplicationContext private val context: Context
 ): ViewModel() {
 
 	private val _userLocation = MutableStateFlow<LocationData?>(null)
 	val userLocation: StateFlow<LocationData?> = _userLocation.asStateFlow()
 
-	private val _isNetworkAvailable = MutableStateFlow(false)
-	val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
+	val isNetworkAvailable: StateFlow<Boolean> = networkManager.isNetworkAvailable
 
 	var isRefreshing by mutableStateOf(false)
 		private set
@@ -61,28 +57,6 @@ class WeatherVM @Inject constructor(
 		_userLocation.value = newLocation
 		fetchLocationName(newLocation)
 		fetchWeatherInfo(newLocation)
-	}
-
-	private fun fetchLocationName(location: LocationData) {
-		viewModelScope.launch(Dispatchers.IO) {
-			try {
-				val geocoder = Geocoder(context, Locale.getDefault())
-				val addresses = geocoder.getFromLocation(
-					location.latitude,
-					location.longitude,
-					1
-				)
-				addresses?.firstOrNull()?.let { address ->
-					val cityName = address.locality ?: address.subAdminArea ?: "Unknown"
-					withContext(Dispatchers.Main) {
-						locationName = cityName
-					}
-				}
-
-			} catch(e: Exception) {
-				Log.d("WeatherVM", "Geocoder error: ${e.message}")
-			}
-		}
 	}
 
 	fun refreshFromPullToRefresh() {
@@ -159,6 +133,13 @@ class WeatherVM @Inject constructor(
 		}
 	}
 
+	private fun fetchLocationName(location: LocationData) {
+		viewModelScope.launch {
+			val name = geocodingRepository.fetchName(location)
+			locationName = name
+		}
+	}
+
 	fun fetchPredictions(
 		query: String,
 		onResult: (List<AutocompletePrediction>) -> Unit
@@ -204,45 +185,8 @@ class WeatherVM @Inject constructor(
 		}
 	}
 
-	private val conectivityManager: ConnectivityManager by lazy {
-		context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-	}
-
-	private val networkCallback = object: ConnectivityManager.NetworkCallback() {
-		override fun onAvailable(network: Network) {
-			Log.d("WeatherVM", "onAvailable: Network available")
-			_isNetworkAvailable.value = true
-		}
-
-		override fun onLost(network: Network) {
-			Log.d("WeatherVM", "onLost: Network lost")
-			_isNetworkAvailable.value = false
-		}
-	}
-
-	init {
-		try {
-			val request = NetworkRequest.Builder()
-				.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-				.build()
-			conectivityManager.registerNetworkCallback(request, networkCallback)
-			checkNetworkAvailability()
-			Log.d("WeatherVM", "init: Network callback registered")
-		} catch(e: Exception) {
-			Log.d("WeatherVM", "init: Network callback registration failed: ${e.message}")
-			_isNetworkAvailable.value = false
-		}
-	}
-
 	override fun onCleared() {
 		super.onCleared()
-		conectivityManager.unregisterNetworkCallback(networkCallback)
-	}
-
-	fun checkNetworkAvailability() {
-		val network = conectivityManager.activeNetwork
-		val capabilities = conectivityManager.getNetworkCapabilities(network)
-		_isNetworkAvailable.value = capabilities != null &&
-				capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+		networkManager.cleanup()
 	}
 }

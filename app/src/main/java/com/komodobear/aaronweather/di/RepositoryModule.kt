@@ -1,5 +1,9 @@
 package com.komodobear.aaronweather.di
 
+import com.komodobear.aaronweather.NetworkManager
+import com.komodobear.aaronweather.NetworkManagerInterface
+import com.komodobear.aaronweather.geocoding.GeoCodingRepositoryImpl
+import com.komodobear.aaronweather.geocoding.GeocodingRepository
 import com.komodobear.aaronweather.location.LocationUtils
 import com.komodobear.aaronweather.location.LocationUtilsInterface
 import com.komodobear.aaronweather.weather.WeatherRepository
@@ -13,6 +17,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
 	@Binds
 	@Singleton
 	abstract fun bindWeatherRepository(
@@ -24,4 +29,16 @@ abstract class RepositoryModule {
 	abstract fun bindLocationUtils(
 		locationUtils: LocationUtils
 	): LocationUtilsInterface
+
+	@Binds
+	@Singleton
+	abstract fun bindNetworkManager(
+		networkManager: NetworkManager
+	): NetworkManagerInterface
+
+	@Binds
+	@Singleton
+	abstract fun bindGeocodingRepository(
+		geocodingRepository: GeoCodingRepositoryImpl
+	): GeocodingRepository
 }

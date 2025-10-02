@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.komodobear.aaronweather.geocoding.GeocodingRepository
 import com.komodobear.aaronweather.location.LocationData
 import com.komodobear.aaronweather.location.LocationUtils
 import com.komodobear.aaronweather.weather.WeatherInfo
@@ -14,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import junit.framework.TestCase.assertFalse
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -29,6 +31,8 @@ class WeatherVMTest {
 	private lateinit var weatherVM: WeatherVM
 	private lateinit var context: Context
 	private lateinit var placesClient: PlacesClient
+	private lateinit var networkManager: NetworkManager
+	private lateinit var geocodingRepository: GeocodingRepository
 
 	@Before
 	fun setUp() {
@@ -38,8 +42,11 @@ class WeatherVMTest {
 		repository = mockk()
 		locationUtils = mockk()
 		placesClient = mockk()
+		networkManager = mockk(relaxed = true)
+		every { networkManager.isNetworkAvailable } returns MutableStateFlow(true)
+		geocodingRepository = mockk()
 		context = mockk(relaxed = true)
-		weatherVM = WeatherVM(repository, locationUtils, placesClient, context)
+		weatherVM = WeatherVM(repository, locationUtils, placesClient, networkManager, geocodingRepository, context)
 	}
 
 	@OptIn(ExperimentalCoroutinesApi::class)

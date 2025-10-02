@@ -1,11 +1,8 @@
 package com.komodobear.aaronweather.e2e
 
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
@@ -40,7 +37,25 @@ class WeatherFlowTest {
 	fun setup() {
 		hiltRule.inject()
 
-		val response = """
+		val geoResponse = """
+    {
+      "results": [
+        {
+          "address_components": [
+            {
+              "long_name": "TestCity",
+              "types": ["locality", "political"]
+            }
+          ]
+        }
+      ]
+    }
+    """.trimIndent() //fake response from geocoding API
+
+		server.enqueue(MockResponse().setBody(geoResponse))
+		//setting fake geocoding data on MockWebServer
+
+		val weatherResponse = """
 {
   "latitude": 1.0,
   "longitude": 2.0,
@@ -74,10 +89,10 @@ class WeatherFlowTest {
     "pressure_msl": [1025.0, 1025.5, 1024.8]
   }
 }
-""".trimIndent()  //fake response from API
+""".trimIndent()  //fake response from weather API
 
-		server.enqueue(MockResponse().setBody(response))
-		//setting fake data on MockWebServer
+		server.enqueue(MockResponse().setBody(weatherResponse))
+		//setting fake weather data on MockWebServer
 	}
 
 	@After
@@ -94,13 +109,7 @@ class WeatherFlowTest {
 
 		//app launches by its own with composeRule
 
-		composeRule.waitUntil(timeoutMillis = 10_000) {
-			composeRule.onAllNodesWithTag("locationName")
-				.fetchSemanticsNodes()
-				.any { it.config.getOrNull(SemanticsProperties.Text)?.first()?.text == "Gdynia" }
-		}
-
-		composeRule.onNodeWithTag("locationName").assertExists().assertTextContains("Gdynia")
+		composeRule.onNodeWithTag("locationName").assertExists().assertTextContains("TestCity")
 
 		composeRule.onNodeWithTag("temperature")
 			.assertExists()
