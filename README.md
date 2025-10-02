@@ -19,7 +19,7 @@ Created to showcase my skills in Android development
 - MVVM + Repository
 - Lottie Animation
 - Hilt (Dependency Injection)
-- Retrofit (Weather API and Places API)
+- Retrofit (Weather API, Geocoding API and Places API)
 - Coroutines & Flow
 
 ## Testing
