@@ -38,7 +38,7 @@ class WeatherApp: Application(), Configuration.Provider {
 
 		WorkManager.getInstance(this).enqueueUniquePeriodicWork(
 			"notification_worker",
-			ExistingPeriodicWorkPolicy.REPLACE,
+			ExistingPeriodicWorkPolicy.KEEP,
 			periodic
 		)
 	}
