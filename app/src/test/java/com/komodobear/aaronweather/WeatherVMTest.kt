@@ -4,11 +4,15 @@ import android.content.Context
 import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.komodobear.aaronweather.geocoding.GeocodingRepository
-import com.komodobear.aaronweather.location.LocationData
-import com.komodobear.aaronweather.location.LocationUtils
-import com.komodobear.aaronweather.weather.WeatherInfo
-import com.komodobear.aaronweather.weather.WeatherRepository
+import com.komodobear.aaronweather.data.LocationUtilsInterface
+import com.komodobear.aaronweather.data.NetworkManagerInterface
+import com.komodobear.aaronweather.data.NotificationUtilsInterface
+import com.komodobear.aaronweather.model.LocationData
+import com.komodobear.aaronweather.model.Result
+import com.komodobear.aaronweather.model.weatherdata.WeatherInfo
+import com.komodobear.aaronweather.repository.DataStoreRepository
+import com.komodobear.aaronweather.repository.GeocodingRepository
+import com.komodobear.aaronweather.repository.WeatherRepository
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -27,12 +31,14 @@ class WeatherVMTest {
 	@get:Rule
 	val instantTaskExecutorRule = InstantTaskExecutorRule()
 	private lateinit var repository: WeatherRepository
-	private lateinit var locationUtils: LocationUtils
+	private lateinit var locationUtils: LocationUtilsInterface
 	private lateinit var weatherVM: WeatherVM
 	private lateinit var context: Context
 	private lateinit var placesClient: PlacesClient
-	private lateinit var networkManager: NetworkManager
+	private lateinit var networkManager: NetworkManagerInterface
 	private lateinit var geocodingRepository: GeocodingRepository
+	private lateinit var notificationUtils: NotificationUtilsInterface
+	private lateinit var dataStoreRepository: DataStoreRepository
 
 	@Before
 	fun setUp() {
@@ -45,8 +51,10 @@ class WeatherVMTest {
 		networkManager = mockk(relaxed = true)
 		every { networkManager.isNetworkAvailable } returns MutableStateFlow(true)
 		geocodingRepository = mockk()
+		notificationUtils = mockk()
+		dataStoreRepository = mockk()
 		context = mockk(relaxed = true)
-		weatherVM = WeatherVM(repository, locationUtils, placesClient, networkManager, geocodingRepository, context)
+		weatherVM = WeatherVM(repository, locationUtils, placesClient, networkManager, geocodingRepository, notificationUtils, dataStoreRepository, context)
 	}
 
 	@OptIn(ExperimentalCoroutinesApi::class)

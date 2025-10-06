@@ -9,7 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.rememberNavController
 import com.komodobear.aaronweather.WeatherVM
-import com.komodobear.aaronweather.location.LocationData
+import com.komodobear.aaronweather.model.LocationData
+import com.komodobear.aaronweather.ui.screens.LoadingScreen
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

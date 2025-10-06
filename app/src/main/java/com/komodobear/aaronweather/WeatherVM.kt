@@ -12,11 +12,15 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.komodobear.aaronweather.geocoding.GeocodingRepository
-import com.komodobear.aaronweather.location.LocationData
-import com.komodobear.aaronweather.location.LocationUtilsInterface
-import com.komodobear.aaronweather.weather.WeatherRepository
-import com.komodobear.aaronweather.weather.WeatherState
+import com.komodobear.aaronweather.data.LocationUtilsInterface
+import com.komodobear.aaronweather.data.NetworkManagerInterface
+import com.komodobear.aaronweather.data.NotificationUtilsInterface
+import com.komodobear.aaronweather.model.LocationData
+import com.komodobear.aaronweather.model.Result
+import com.komodobear.aaronweather.model.weatherdata.WeatherState
+import com.komodobear.aaronweather.repository.DataStoreRepository
+import com.komodobear.aaronweather.repository.GeocodingRepository
+import com.komodobear.aaronweather.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -36,11 +40,19 @@ class WeatherVM @Inject constructor(
 	private val placesClient: PlacesClient,
 	private val networkManager: NetworkManagerInterface,
 	private val geocodingRepository: GeocodingRepository,
+	private val notificationUtils: NotificationUtilsInterface,
+	private val dataStoreRepository: DataStoreRepository,
 	@ApplicationContext private val context: Context
 ): ViewModel() {
 
 	private val _userLocation = MutableStateFlow<LocationData?>(null)
 	val userLocation: StateFlow<LocationData?> = _userLocation.asStateFlow()
+
+	private val _hasLocationPermission = MutableStateFlow(false)
+	val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
+
+	private val _hasNotificationPermission = MutableStateFlow(false)
+	val hasNotificationPermission: StateFlow<Boolean> = _hasNotificationPermission.asStateFlow()
 
 	val isNetworkAvailable: StateFlow<Boolean> = networkManager.isNetworkAvailable
 
@@ -57,6 +69,15 @@ class WeatherVM @Inject constructor(
 		_userLocation.value = newLocation
 		fetchLocationName(newLocation)
 		fetchWeatherInfo(newLocation)
+		updateDataStoreLocation(newLocation)
+	}
+
+	fun checkLocationPermission(context: Context) {
+		_hasLocationPermission.value = locationUtils.hasLocationPermission(context)
+	}
+
+	fun checkNotificationPermission(context: Context) {
+		_hasNotificationPermission.value = notificationUtils.hasNotificationPermission(context)
 	}
 
 	fun refreshFromPullToRefresh() {
@@ -73,6 +94,12 @@ class WeatherVM @Inject constructor(
 		}
 	}
 
+	fun updateDataStoreLocation(location: LocationData) {
+		viewModelScope.launch {
+			dataStoreRepository.saveLocation(location)
+		}
+	}
+
 	fun loadWeatherInfo(context: Context) {
 		viewModelScope.launch {
 			try {
@@ -80,14 +107,33 @@ class WeatherVM @Inject constructor(
 					isLoading = true,
 					error = null
 				)
-				if(locationUtils.hasLocationPermission(context)) {
-					locationUtils.requestLocationUpdates(this@WeatherVM)
-				} else {
+
+				if(! locationUtils.hasLocationPermission(context)) {
 					weatherState = weatherState.copy(
 						isLoading = false,
 						error = "Location permission not granted"
 					)
 					Log.d("WeatherVM", "checkPermission: Location permission not granted")
+					return@launch
+				}
+
+				val location = withContext(Dispatchers.IO) {
+					try {
+						locationUtils.getLocation()
+					} catch(e: Exception) {
+						Log.e("WeatherVM", "getLocation failed: ${e.message}", e)
+						null
+					}
+				}
+
+				if(location != null) {
+					updateLocation(location)
+				} else {
+					weatherState = weatherState.copy(
+						isLoading = false,
+						error = "Could not obtain location"
+					)
+					Log.d("WeatherVM", "loadWeatherInfo: Could not obtain location")
 				}
 			} catch(e: Exception) {
 				weatherState = weatherState.copy(

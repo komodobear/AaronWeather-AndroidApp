@@ -3,10 +3,11 @@ package com.komodobear.aaronweather.screens
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import com.komodobear.aaronweather.weather.WeatherData
-import com.komodobear.aaronweather.weather.WeatherInfo
-import com.komodobear.aaronweather.weather.WeatherState
-import com.komodobear.aaronweather.weather.WeatherType
+import com.komodobear.aaronweather.model.weatherdata.WeatherData
+import com.komodobear.aaronweather.model.weatherdata.WeatherInfo
+import com.komodobear.aaronweather.model.weatherdata.WeatherState
+import com.komodobear.aaronweather.model.weatherdata.WeatherType
+import com.komodobear.aaronweather.ui.screens.WeatherContent
 import org.junit.Rule
 import org.junit.Test
 import java.time.ZonedDateTime

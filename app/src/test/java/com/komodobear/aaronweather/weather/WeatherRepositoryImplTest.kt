@@ -1,6 +1,10 @@
 package com.komodobear.aaronweather.weather
 
-import com.komodobear.aaronweather.Result
+import com.komodobear.aaronweather.model.Result
+import com.komodobear.aaronweather.api.WeatherApi
+import com.komodobear.aaronweather.model.weatherdata.WeatherDataDto
+import com.komodobear.aaronweather.model.weatherdata.WeatherDto
+import com.komodobear.aaronweather.repository.WeatherRepositoryImpl
 import io.mockk.coEvery
 import io.mockk.mockk
 import junit.framework.TestCase.assertTrue

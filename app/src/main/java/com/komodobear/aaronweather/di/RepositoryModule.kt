@@ -1,13 +1,15 @@
 package com.komodobear.aaronweather.di
 
-import com.komodobear.aaronweather.NetworkManager
-import com.komodobear.aaronweather.NetworkManagerInterface
-import com.komodobear.aaronweather.geocoding.GeoCodingRepositoryImpl
-import com.komodobear.aaronweather.geocoding.GeocodingRepository
-import com.komodobear.aaronweather.location.LocationUtils
-import com.komodobear.aaronweather.location.LocationUtilsInterface
-import com.komodobear.aaronweather.weather.WeatherRepository
-import com.komodobear.aaronweather.weather.WeatherRepositoryImpl
+import com.komodobear.aaronweather.data.LocationUtils
+import com.komodobear.aaronweather.data.LocationUtilsInterface
+import com.komodobear.aaronweather.data.NetworkManager
+import com.komodobear.aaronweather.data.NetworkManagerInterface
+import com.komodobear.aaronweather.repository.DataStoreRepository
+import com.komodobear.aaronweather.repository.DataStoreRepositoryImpl
+import com.komodobear.aaronweather.repository.GeoCodingRepositoryImpl
+import com.komodobear.aaronweather.repository.GeocodingRepository
+import com.komodobear.aaronweather.repository.WeatherRepository
+import com.komodobear.aaronweather.repository.WeatherRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
 	abstract fun bindGeocodingRepository(
 		geocodingRepository: GeoCodingRepositoryImpl
 	): GeocodingRepository
+
+	@Binds
+	@Singleton
+	abstract fun bindDataStoreRepository(
+		datastoreRepository: DataStoreRepositoryImpl
+	): DataStoreRepository
 }

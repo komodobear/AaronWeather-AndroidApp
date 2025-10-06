@@ -1,5 +1,9 @@
 package com.komodobear.aaronweather.weather
 
+import com.komodobear.aaronweather.data.toWeatherDataMap
+import com.komodobear.aaronweather.data.toWeatherInfo
+import com.komodobear.aaronweather.model.weatherdata.WeatherDataDto
+import com.komodobear.aaronweather.model.weatherdata.WeatherDto
 import junit.framework.TestCase.assertEquals
 import java.time.Clock
 import java.time.Instant

@@ -1,22 +1,23 @@
 package com.komodobear.aaronweather.e2e
 
 import android.content.Context
-import com.komodobear.aaronweather.WeatherVM
-import com.komodobear.aaronweather.location.LocationData
-import com.komodobear.aaronweather.location.LocationUtilsInterface
+import com.komodobear.aaronweather.data.LocationUtilsInterface
+import com.komodobear.aaronweather.model.LocationData
+import javax.inject.Inject
 
-class FakeLocationUtils(
+class FakeLocationUtils @Inject constructor() : LocationUtilsInterface {
+
 	private val fakeLocation: LocationData = LocationData(
 		latitude = 54.4966122,
 		longitude = 18.5393955
 	)
-) : LocationUtilsInterface {
-
-	override fun requestLocationUpdates(weatherVM: WeatherVM) {
-		weatherVM.updateLocation(fakeLocation)
-	}
 
 	override fun hasLocationPermission(context: Context): Boolean {
 		return true
 	}
+
+	override suspend fun getLocation(): LocationData? {
+		return LocationData(fakeLocation.latitude, fakeLocation.longitude)
+	}
+
 }

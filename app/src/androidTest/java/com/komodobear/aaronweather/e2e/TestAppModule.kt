@@ -1,19 +1,27 @@
 package com.komodobear.aaronweather.e2e
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.komodobear.aaronweather.NetworkManagerInterface
+import com.komodobear.aaronweather.api.GeocodingApi
+import com.komodobear.aaronweather.api.WeatherApi
+import com.komodobear.aaronweather.data.LocationUtilsInterface
+import com.komodobear.aaronweather.data.NetworkManagerInterface
+import com.komodobear.aaronweather.data.NotificationUtilsInterface
 import com.komodobear.aaronweather.di.AppModule
 import com.komodobear.aaronweather.di.RepositoryModule
-import com.komodobear.aaronweather.geocoding.GeoCodingRepositoryImpl
-import com.komodobear.aaronweather.geocoding.GeocodingApi
-import com.komodobear.aaronweather.geocoding.GeocodingRepository
-import com.komodobear.aaronweather.location.LocationUtilsInterface
-import com.komodobear.aaronweather.weather.WeatherApi
-import com.komodobear.aaronweather.weather.WeatherRepository
-import com.komodobear.aaronweather.weather.WeatherRepositoryImpl
+import com.komodobear.aaronweather.model.dataStore
+import com.komodobear.aaronweather.repository.DataStoreRepository
+import com.komodobear.aaronweather.repository.DataStoreRepositoryImpl
+import com.komodobear.aaronweather.repository.GeoCodingRepositoryImpl
+import com.komodobear.aaronweather.repository.GeocodingRepository
+import com.komodobear.aaronweather.repository.WeatherRepository
+import com.komodobear.aaronweather.repository.WeatherRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import io.mockk.mockk
@@ -82,7 +90,7 @@ object TestAppModule {
 
 	@Provides
 	@Singleton
-	fun provideFakeLocationUtils(): FakeLocationUtils = FakeLocationUtils()
+	fun provideFakeNotificationUtils(): NotificationUtilsInterface = FakeNotificationUtils()
 
 	@Provides
 	@Singleton
@@ -93,6 +101,11 @@ object TestAppModule {
 	@Provides
 	@Singleton
 	fun provideFakeNetworkManager(): NetworkManagerInterface = FakeNetworkManager()
+
+	@Provides
+	@Singleton
+	fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+		context.dataStore
 }
 
 @Module
@@ -117,4 +130,10 @@ object TestAppModule {
 	abstract fun bindGeocodingApi(
 		geocodingRepository: GeoCodingRepositoryImpl
 	): GeocodingRepository
+
+	@Binds
+	@Singleton
+	abstract fun bindDataStoreRepository(
+		datastoreRepository: DataStoreRepositoryImpl
+	): DataStoreRepository
 }
