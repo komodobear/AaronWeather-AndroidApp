@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -26,9 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
-import com.komodobear.aaronweather.model.ThemeColors
-import com.komodobear.aaronweather.WeatherVM
 import com.komodobear.aaronweather.model.Screen
+import com.komodobear.aaronweather.model.ThemeColors
+import com.komodobear.aaronweather.ui.composables.LoadingAnimation
+import com.komodobear.aaronweather.viewmodels.WeatherVM
 
 @Composable
 fun LoadingScreen(
@@ -57,7 +59,7 @@ fun LoadingScreen(
 		}
 	}
 
-	LaunchedEffect(userLocation.value) {
+	LaunchedEffect(userLocation.value, isNetworkAvailable.value) {
 		if (!isNetworkAvailable.value) return@LaunchedEffect
 
 		if (userLocation.value != null) {
@@ -69,6 +71,12 @@ fun LoadingScreen(
 		}
 	}
 
+	DisposableEffect(Unit) {
+		weatherVM.startNetworkMonitoring()
+		onDispose {
+			weatherVM.stopNetworkMonitoring()
+		}
+	}
 
 	Box(modifier = Modifier
         .fillMaxSize()
@@ -106,9 +114,11 @@ fun LoadingScreen(
 					textAlign = TextAlign.Center
 				)
 			}
-			LoadingAnimation(Modifier
-                .align(Alignment.Center)
-                .size(130.dp))
+			LoadingAnimation(
+				Modifier
+					.align(Alignment.Center)
+					.size(130.dp)
+			)
 		}
 	}
 }

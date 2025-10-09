@@ -7,7 +7,7 @@ import com.komodobear.aaronweather.model.weatherdata.WeatherData
 import com.komodobear.aaronweather.model.weatherdata.WeatherInfo
 import com.komodobear.aaronweather.model.weatherdata.WeatherState
 import com.komodobear.aaronweather.model.weatherdata.WeatherType
-import com.komodobear.aaronweather.ui.screens.WeatherContent
+import com.komodobear.aaronweather.ui.screens.weatherscreen.WeatherContent
 import org.junit.Rule
 import org.junit.Test
 import java.time.ZonedDateTime

@@ -8,10 +8,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.komodobear.aaronweather.data.LocationUtilsInterface
+import com.komodobear.aaronweather.data.LocationUtils
 import com.komodobear.aaronweather.ui.composables.SystemAppearance
-import com.komodobear.aaronweather.ui.screens.MainScreen
+import com.komodobear.aaronweather.ui.screens.mainscreen.MainScreen
 import com.komodobear.aaronweather.ui.theme.WeatherAppTheme
+import com.komodobear.aaronweather.viewmodels.PlacesVM
+import com.komodobear.aaronweather.viewmodels.WeatherVM
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -19,7 +21,7 @@ import javax.inject.Inject
 class MainActivity: ComponentActivity() {
 
 	@Inject
-	lateinit var locationUtils: LocationUtilsInterface
+	lateinit var locationUtils: LocationUtils
 
 	@RequiresApi(Build.VERSION_CODES.O)
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +31,7 @@ class MainActivity: ComponentActivity() {
 
 		setContent {
 			val weatherVM: WeatherVM = hiltViewModel()
+			val placesVM: PlacesVM = hiltViewModel()
 			val navController = rememberNavController()
 
 			WeatherAppTheme(weatherVM = weatherVM) {

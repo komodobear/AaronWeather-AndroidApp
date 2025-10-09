@@ -1,18 +1,17 @@
 package com.komodobear.aaronweather.e2e
 
-import android.content.Context
-import com.komodobear.aaronweather.data.LocationUtilsInterface
+import com.komodobear.aaronweather.data.LocationUtils
 import com.komodobear.aaronweather.model.LocationData
 import javax.inject.Inject
 
-class FakeLocationUtils @Inject constructor() : LocationUtilsInterface {
+class FakeLocationUtils @Inject constructor() : LocationUtils {
 
 	private val fakeLocation: LocationData = LocationData(
 		latitude = 54.4966122,
 		longitude = 18.5393955
 	)
 
-	override fun hasLocationPermission(context: Context): Boolean {
+	override fun hasLocationPermission(): Boolean {
 		return true
 	}
 

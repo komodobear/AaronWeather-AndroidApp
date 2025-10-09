@@ -24,6 +24,10 @@ import javax.inject.Inject
 @RunWith(AndroidJUnit4::class)
 class WeatherFlowTest {
 
+	//
+	// May require clear build
+	//
+
 	@get:Rule(order = 0)
 	val hiltRule = HiltAndroidRule(this)
 

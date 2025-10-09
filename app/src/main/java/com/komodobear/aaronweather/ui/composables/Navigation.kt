@@ -1,4 +1,4 @@
-package com.komodobear.aaronweather.ui.screens
+package com.komodobear.aaronweather.ui.composables
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -6,14 +6,16 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.komodobear.aaronweather.WeatherVM
 import com.komodobear.aaronweather.model.Screen
+import com.komodobear.aaronweather.ui.screens.LoadingScreen
+import com.komodobear.aaronweather.ui.screens.weatherscreen.WeatherScreen
+import com.komodobear.aaronweather.viewmodels.WeatherVM
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Navigation(
 	weatherVM: WeatherVM,
-	navController: NavHostController,
+	navController: NavHostController
 ) {
 	NavHost(
 		navController = navController,

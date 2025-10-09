@@ -11,8 +11,6 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.komodobear.aaronweather.BuildConfig
 import com.komodobear.aaronweather.api.GeocodingApi
 import com.komodobear.aaronweather.api.WeatherApi
-import com.komodobear.aaronweather.data.NotificationUtils
-import com.komodobear.aaronweather.data.NotificationUtilsInterface
 import com.komodobear.aaronweather.model.dataStore
 import dagger.Module
 import dagger.Provides
@@ -63,12 +61,6 @@ object AppModule {
 			Places.initialize(app, BuildConfig.API_KEY)
 		}
 		return Places.createClient(app)
-	}
-
-	@Provides
-	@Singleton
-	fun provideNotificationUtils(): NotificationUtilsInterface {
-		return NotificationUtils()
 	}
 
 	@Provides

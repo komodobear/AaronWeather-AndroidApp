@@ -6,16 +6,18 @@ import androidx.datastore.preferences.core.Preferences
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.komodobear.aaronweather.api.GeocodingApi
 import com.komodobear.aaronweather.api.WeatherApi
-import com.komodobear.aaronweather.data.LocationUtilsInterface
-import com.komodobear.aaronweather.data.NetworkManagerInterface
-import com.komodobear.aaronweather.data.NotificationUtilsInterface
+import com.komodobear.aaronweather.data.LocationUtils
+import com.komodobear.aaronweather.data.NetworkManager
+import com.komodobear.aaronweather.data.NotificationUtils
 import com.komodobear.aaronweather.di.AppModule
-import com.komodobear.aaronweather.di.RepositoryModule
+import com.komodobear.aaronweather.di.BindModule
 import com.komodobear.aaronweather.model.dataStore
 import com.komodobear.aaronweather.repository.DataStoreRepository
 import com.komodobear.aaronweather.repository.DataStoreRepositoryImpl
 import com.komodobear.aaronweather.repository.GeoCodingRepositoryImpl
 import com.komodobear.aaronweather.repository.GeocodingRepository
+import com.komodobear.aaronweather.repository.PlacesRepository
+import com.komodobear.aaronweather.repository.PlacesRepositoryImpl
 import com.komodobear.aaronweather.repository.WeatherRepository
 import com.komodobear.aaronweather.repository.WeatherRepositoryImpl
 import dagger.Binds
@@ -90,7 +92,7 @@ object TestAppModule {
 
 	@Provides
 	@Singleton
-	fun provideFakeNotificationUtils(): NotificationUtilsInterface = FakeNotificationUtils()
+	fun provideFakeNotificationUtils(): NotificationUtils = FakeNotificationUtils()
 
 	@Provides
 	@Singleton
@@ -100,7 +102,7 @@ object TestAppModule {
 
 	@Provides
 	@Singleton
-	fun provideFakeNetworkManager(): NetworkManagerInterface = FakeNetworkManager()
+	fun provideFakeNetworkManager(): NetworkManager = FakeNetworkManager()
 
 	@Provides
 	@Singleton
@@ -111,7 +113,7 @@ object TestAppModule {
 @Module
 @TestInstallIn(
 	components = [SingletonComponent::class],
-	replaces = [RepositoryModule::class]
+	replaces = [BindModule::class]
 )abstract class TestRepositoryModule {
 	@Binds
 	@Singleton
@@ -123,7 +125,7 @@ object TestAppModule {
 	@Singleton
 	abstract fun bindLocationUtils(
 		locationUtils: FakeLocationUtils
-	): LocationUtilsInterface
+	): LocationUtils
 
 	@Binds
 	@Singleton
@@ -136,4 +138,11 @@ object TestAppModule {
 	abstract fun bindDataStoreRepository(
 		datastoreRepository: DataStoreRepositoryImpl
 	): DataStoreRepository
+
+	@Binds
+	@Singleton
+	abstract fun bindPlacesRepository(
+		placesRepository: PlacesRepositoryImpl
+	): PlacesRepository
+
 }

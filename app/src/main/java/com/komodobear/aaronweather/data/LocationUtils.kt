@@ -20,19 +20,19 @@ import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
-interface LocationUtilsInterface {
-	fun hasLocationPermission(context: Context): Boolean
+interface LocationUtils {
+	fun hasLocationPermission(): Boolean
 	suspend fun getLocation(): LocationData?
 }
 
-class LocationUtils @Inject constructor(
-	@ApplicationContext context: Context
-): LocationUtilsInterface {
+class LocationUtilsImpl @Inject constructor(
+	@ApplicationContext private val context: Context
+): LocationUtils {
 
 	private val _fusedLocationClient: FusedLocationProviderClient =
 		LocationServices.getFusedLocationProviderClient(context)
 
-	override fun hasLocationPermission(context: Context): Boolean {
+	override fun hasLocationPermission(): Boolean {
 		val fine = ContextCompat.checkSelfPermission(
 			context,
 			Manifest.permission.ACCESS_FINE_LOCATION
@@ -68,7 +68,7 @@ class LocationUtils @Inject constructor(
 						try {
 							_fusedLocationClient.removeLocationUpdates(this)
 						} catch(e: Exception) {
-							Log.e("LocationUtils", "getLocationOnce exception: ${e.message}", e)
+							Log.e("LocationUtilsImpl", "getLocationOnce exception: ${e.message}", e)
 						}
 					}
 				}
@@ -79,7 +79,7 @@ class LocationUtils @Inject constructor(
 					try{
 						_fusedLocationClient.removeLocationUpdates(callback)
 					}catch(e: Exception){
-						Log.e("LocationUtils", "getLocationOnce cancellation exception: ${e.message}", e)
+						Log.e("LocationUtilsImpl", "getLocationOnce cancellation exception: ${e.message}", e)
 					}
 				}
 			}

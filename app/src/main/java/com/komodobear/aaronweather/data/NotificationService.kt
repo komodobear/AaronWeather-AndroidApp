@@ -39,7 +39,7 @@ class NotificationService: Service() {
 	lateinit var geocodingRepository: GeocodingRepository
 
 	@Inject
-	lateinit var locationUtils: LocationUtilsInterface
+	lateinit var locationUtils: LocationUtils
 
 	private val channelID = "weather_channel"
 	private val notificationID = 1

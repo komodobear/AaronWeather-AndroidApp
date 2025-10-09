@@ -14,9 +14,7 @@ import androidx.work.WorkerParameters
 import com.komodobear.aaronweather.MainActivity
 import com.komodobear.aaronweather.R
 import com.komodobear.aaronweather.model.LocationData
-import com.komodobear.aaronweather.repository.DataStoreRepository
-import com.komodobear.aaronweather.repository.GeocodingRepository
-import com.komodobear.aaronweather.repository.WeatherRepository
+import com.komodobear.aaronweather.usecases.UseCasesHolder
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -27,11 +25,7 @@ import com.komodobear.aaronweather.model.Result as DataResult
 class NotificationWorker @AssistedInject constructor(
 	@Assisted appContext: Context,
 	@Assisted params: WorkerParameters,
-	private val locationUtils: LocationUtilsInterface,
-	private val weatherRepository: WeatherRepository,
-	private val geocodingRepository: GeocodingRepository,
-	private val notificationUtils: NotificationUtilsInterface,
-	private val dataStoreRepository: DataStoreRepository
+	private val useCases: UseCasesHolder
 ): CoroutineWorker(appContext, params) {
 
 	private val tag = "NotificationWorker"
@@ -41,13 +35,13 @@ class NotificationWorker @AssistedInject constructor(
 
 		Log.i(tag, "doWork: Running notification worker")
 
-		if(! notificationUtils.hasNotificationPermission(applicationContext)) {
+		if(! useCases.hasNotificationPermission()) {
 			Log.w(tag, "Notification permission not granted - retry")
 			return Result.retry()
 		}
 
 		val savedLocation = try {
-			dataStoreRepository.getLocation().first()
+			useCases.getSavedLocation().first()
 		} catch(e: Exception) {
 			Log.e(tag, "Failed to read location from DataStore", e)
 			null
@@ -56,7 +50,7 @@ class NotificationWorker @AssistedInject constructor(
 		val location = if(savedLocation == null ||
 			(savedLocation.latitude == 0.0 && savedLocation.longitude == 0.0)
 		) {
-			val userLocation = locationUtils.getLocation()
+			val userLocation = useCases.getLocation()
 			if(userLocation == null) {
 				Log.w(
 					tag,
@@ -68,15 +62,18 @@ class NotificationWorker @AssistedInject constructor(
 			LocationData(savedLocation.latitude, savedLocation.longitude)
 		}
 
-		val (lat, lon) = location
-
-		when(val result = weatherRepository.getWeatherData(lat, lon)) {
+		when(val result = useCases.getWeather(location)) {
 			is DataResult.Success -> {
 				val current = result.data?.currentWeatherData
 				val weather = current?.weatherType?.weatherDesc ?: "Unknown"
 				val temp = current?.temperature ?: 0.0
 				val hour = current?.time?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: ""
-				val city = geocodingRepository.fetchName(LocationData(lat, lon))
+				val city = useCases.fetchLocationName(
+					LocationData(
+						location.latitude,
+						location.longitude
+					)
+				)
 
 				val title = "$city $hour"
 				val text = "${"%.1f".format(temp)}°C, $weather "

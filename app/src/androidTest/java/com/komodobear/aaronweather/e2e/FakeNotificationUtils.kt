@@ -1,10 +1,9 @@
 package com.komodobear.aaronweather.e2e
 
-import android.content.Context
-import com.komodobear.aaronweather.data.NotificationUtilsInterface
+import com.komodobear.aaronweather.data.NotificationUtils
 
-class FakeNotificationUtils(): NotificationUtilsInterface {
-	override fun hasNotificationPermission(context: Context): Boolean {
+class FakeNotificationUtils(): NotificationUtils {
+	override fun hasNotificationPermission(): Boolean {
 		return true
 	}
 }

@@ -13,16 +13,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface NetworkManagerInterface {
+interface NetworkManager {
 	val isNetworkAvailable: StateFlow<Boolean>
 	fun checkNetworkAvailability()
 	fun cleanup()
 }
 
 @Singleton
-class NetworkManager @Inject constructor(
+class NetworkManagerImpl @Inject constructor(
 	@ApplicationContext private val context: Context
-): NetworkManagerInterface {
+): NetworkManager {
 	private val connectivityManager: ConnectivityManager by lazy {
 		context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 	}
@@ -32,12 +32,12 @@ class NetworkManager @Inject constructor(
 
 	private val networkCallback = object: ConnectivityManager.NetworkCallback() {
 		override fun onAvailable(network: Network) {
-			Log.d("NetworkManager", "onAvailable: Network available")
+			Log.d("NetworkManagerImpl", "onAvailable: Network available")
 			_isNetworkAvailable.value = true
 		}
 
 		override fun onLost(network: Network) {
-			Log.d("NetworkManager", "onLost: Network lost")
+			Log.d("NetworkManagerImpl", "onLost: Network lost")
 			_isNetworkAvailable.value = false
 		}
 	}
@@ -47,7 +47,7 @@ class NetworkManager @Inject constructor(
 		val capabilities = connectivityManager.getNetworkCapabilities(network)
 		_isNetworkAvailable.value = capabilities != null &&
 				capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-		Log.d("NetworkManager", "checkNetworkAvailability: Network available = ${_isNetworkAvailable.value}")
+		Log.d("NetworkManagerImpl", "checkNetworkAvailability: Network available = ${_isNetworkAvailable.value}")
 	}
 
 	init {
@@ -57,9 +57,9 @@ class NetworkManager @Inject constructor(
 				.build()
 			connectivityManager.registerNetworkCallback(request, networkCallback)
 			checkNetworkAvailability()
-			Log.d("NetworkManager", "init: Network callback registered")
+			Log.d("NetworkManagerImpl", "init: Network callback registered")
 		} catch(e: Exception) {
-			Log.d("NetworkManager", "init: Network callback registration failed: ${e.message}")
+			Log.d("NetworkManagerImpl", "init: Network callback registration failed: ${e.message}")
 			_isNetworkAvailable.value = false
 		}
 	}

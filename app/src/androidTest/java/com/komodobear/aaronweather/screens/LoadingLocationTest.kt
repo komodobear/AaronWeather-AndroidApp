@@ -8,9 +8,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.rememberNavController
-import com.komodobear.aaronweather.WeatherVM
 import com.komodobear.aaronweather.model.LocationData
 import com.komodobear.aaronweather.ui.screens.LoadingScreen
+import com.komodobear.aaronweather.viewmodels.WeatherVM
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -67,7 +67,7 @@ class LoadingLocationTest {
 		val fakeWeatherVM = mockk<WeatherVM>(relaxed = true)
 		every { fakeWeatherVM.isNetworkAvailable } returns MutableStateFlow(true)
 		every { fakeWeatherVM.userLocation } returns MutableStateFlow(LocationData(1.0, 2.0))
-		every { fakeWeatherVM.loadWeatherInfo(any()) } returns Unit
+		every { fakeWeatherVM.loadWeatherInfo() } returns Unit
 
 		val navController = mockk<NavHostController>(relaxed = true)
 		// mock nav controller to verify navigation

@@ -1,82 +1,130 @@
 package com.komodobear.aaronweather
 
-import android.content.Context
 import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.google.android.libraries.places.api.net.PlacesClient
-import com.komodobear.aaronweather.data.LocationUtilsInterface
-import com.komodobear.aaronweather.data.NetworkManagerInterface
-import com.komodobear.aaronweather.data.NotificationUtilsInterface
 import com.komodobear.aaronweather.model.LocationData
 import com.komodobear.aaronweather.model.Result
 import com.komodobear.aaronweather.model.weatherdata.WeatherInfo
-import com.komodobear.aaronweather.repository.DataStoreRepository
-import com.komodobear.aaronweather.repository.GeocodingRepository
-import com.komodobear.aaronweather.repository.WeatherRepository
+import com.komodobear.aaronweather.usecases.FetchLocationNameUseCase
+import com.komodobear.aaronweather.usecases.GetLocationUseCase
+import com.komodobear.aaronweather.usecases.GetSavedLocationUseCase
+import com.komodobear.aaronweather.usecases.LocationPermissionUseCase
+import com.komodobear.aaronweather.usecases.NetworkManagerUseCase
+import com.komodobear.aaronweather.usecases.NotificationPermissionUseCase
+import com.komodobear.aaronweather.usecases.SaveLocationUseCase
+import com.komodobear.aaronweather.usecases.UseCasesHolder
+import com.komodobear.aaronweather.usecases.WeatherUseCase
+import com.komodobear.aaronweather.viewmodels.WeatherVM
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import junit.framework.TestCase.assertFalse
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 
 
 class WeatherVMTest {
 
 	@get:Rule
 	val instantTaskExecutorRule = InstantTaskExecutorRule()
-	private lateinit var repository: WeatherRepository
-	private lateinit var locationUtils: LocationUtilsInterface
-	private lateinit var weatherVM: WeatherVM
-	private lateinit var context: Context
-	private lateinit var placesClient: PlacesClient
-	private lateinit var networkManager: NetworkManagerInterface
-	private lateinit var geocodingRepository: GeocodingRepository
-	private lateinit var notificationUtils: NotificationUtilsInterface
-	private lateinit var dataStoreRepository: DataStoreRepository
 
+	private val dispatcher = StandardTestDispatcher()
+
+	private lateinit var useCasesHolder: UseCasesHolder
+	private lateinit var weatherVM: WeatherVM
+
+
+	@OptIn(ExperimentalCoroutinesApi::class)
 	@Before
 	fun setUp() {
+
 		mockkStatic(Log::class)
 		every { Log.d(any(), any()) } returns 0
 
-		repository = mockk()
-		locationUtils = mockk()
-		placesClient = mockk()
-		networkManager = mockk(relaxed = true)
-		every { networkManager.isNetworkAvailable } returns MutableStateFlow(true)
-		geocodingRepository = mockk()
-		notificationUtils = mockk()
-		dataStoreRepository = mockk()
-		context = mockk(relaxed = true)
-		weatherVM = WeatherVM(repository, locationUtils, placesClient, networkManager, geocodingRepository, notificationUtils, dataStoreRepository, context)
+		Dispatchers.setMain(dispatcher)
+
+		val fetchLocationNameUC = mockk<FetchLocationNameUseCase>()
+		val hasNotificationPermissionUC = mockk<NotificationPermissionUseCase>()
+		val saveLocationUC = mockk<SaveLocationUseCase>()
+		val getSavedLocationUC = mockk<GetSavedLocationUseCase>()
+		val networkManagerUC = mockk<NetworkManagerUseCase>()
+		val hasLocationPermissionUC = mockk<LocationPermissionUseCase>()
+		val getLocationUC = mockk<GetLocationUseCase>()
+		val weatherUC = mockk<WeatherUseCase>()
+
+		// fake use cases
+
+		every { hasLocationPermissionUC.invoke() } returns true
+		every { hasNotificationPermissionUC.invoke() } returns true
+		every { networkManagerUC.isNetworkAvailable } returns MutableStateFlow(true)
+
+		// returns fake values to vm
+
+		useCasesHolder = UseCasesHolder(
+			fetchLocationName = fetchLocationNameUC,
+			hasNotificationPermission = hasNotificationPermissionUC,
+			updateDataStoreLocation = saveLocationUC,
+			getSavedLocation = getSavedLocationUC,
+			networkState = networkManagerUC,
+			hasLocationPermission = hasLocationPermissionUC,
+			getLocation = getLocationUC,
+			getWeather = weatherUC
+		)
+
+		weatherVM = WeatherVM(useCasesHolder)
+
 	}
 
 	@OptIn(ExperimentalCoroutinesApi::class)
-	@Test
-	fun `update location updates userLocation and state`() {
-
-		val testLocation = LocationData(1.0, 2.0)
-		val weatherInfo = WeatherInfo(
-			emptyMap(),
-			null
-		)
-		coEvery { repository.getWeatherData(any(), any()) } returns Result.Success(weatherInfo)
-		// Fake data fetch
-
-		every { locationUtils.hasLocationPermission(any()) } returns true
-		// Location permission granted
-
-		weatherVM.updateLocation(testLocation)
-
-		assertEquals(testLocation, weatherVM.userLocation.value) // Check location updated
-		assertEquals(weatherInfo, weatherVM.weatherState.weatherInfo) // Check weather info updated
-		assertFalse(weatherVM.weatherState.isLoading) // Check loading state
-
+	@After
+	fun tearDown() {
+		Dispatchers.resetMain()
 	}
+
+
+	@OptIn(ExperimentalCoroutinesApi::class)
+	@Test
+	fun `update location updates userLocation and state`() = runTest {
+		// arrange location
+		val location = LocationData(latitude = 1.23, longitude = 4.56)
+
+		// arrange state
+		val testWeatherInfo = mockk<WeatherInfo>(relaxed = true)
+
+		coEvery { useCasesHolder.fetchLocationName.invoke(location) } returns "Test City"
+		coEvery { useCasesHolder.updateDataStoreLocation.invoke(location) } returns Unit
+		coEvery { useCasesHolder.getWeather.invoke(location) } returns Result.Success(
+			testWeatherInfo
+		)
+
+		// test method
+		weatherVM.updateLocation(location)
+		advanceUntilIdle()
+
+		// assertions
+		assertEquals(location, weatherVM.userLocation.value)
+		assertEquals("Test City", weatherVM.locationName)
+		assertSame(testWeatherInfo, weatherVM.weatherState.weatherInfo)
+		assertFalse(weatherVM.isRefreshing)
+
+		// check updateLocation()
+		coVerify(exactly = 1) { useCasesHolder.fetchLocationName.invoke(location) }
+		coVerify(exactly = 1) { useCasesHolder.updateDataStoreLocation.invoke(location) }
+		coVerify(exactly = 1) { useCasesHolder.getWeather.invoke(location) }
+	}
+
 }
