@@ -20,7 +20,7 @@ Created to showcase my skills in Android development
 - Kotlin
 - Jetpack Compose
 - Jetpack Navigation
-- MVVM + Repository
+- MVVM + Repository + UseCases
 - Lottie Animation
 - Hilt (Dependency Injection)
 - Retrofit (Weather API, Geocoding API and Places API)
