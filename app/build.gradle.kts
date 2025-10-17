@@ -12,6 +12,19 @@ android {
 	namespace = "com.komodobear.aaronweather"
 	compileSdk = 35
 
+	val apiKeyFromLocal: String? = run {
+		val localProperties = rootProject.file("local.properties")
+		if (localProperties.exists()) {
+			val props = Properties().apply { load(localProperties.inputStream()) }
+			(props["API_KEY"] as? String)?.takeIf { it.isNotBlank() }
+		} else null
+	}
+
+	val apiKeyFromProject: String? = (project.findProperty("API_KEY") as? String)?.takeIf { it.isNotBlank() }
+	val apiKeyFromEnv: String? = System.getenv("API_KEY")?.takeIf { it.isNotBlank() }
+
+	val apiKey: String = apiKeyFromLocal ?: apiKeyFromProject ?: apiKeyFromEnv ?: ""
+
 	defaultConfig {
 		applicationId = "com.komodobear.aaronweather"
 		minSdk = 24
@@ -26,7 +39,7 @@ android {
 			val properties = Properties().apply {
 				load(localProperties.inputStream())
 			}
-			buildConfigField("String", "API_KEY", "\"${properties["API_KEY"]}\"")
+			buildConfigField("String", "API_KEY", "\"$apiKey\"")
 		}
 	}
 
