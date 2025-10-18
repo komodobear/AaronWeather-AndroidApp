@@ -3,7 +3,7 @@ on: [ push, pull_request ]
 
 jobs:
   connected_tests:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
@@ -11,5 +11,5 @@ jobs:
       - name: Run espresso tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 35
           script: ./gradlew connectedCheck
