@@ -46,17 +46,38 @@ jobs:
             ELAPSED_TIME=0
             MAX_WAIT=300 # Opcjonalny dodatkowy limit czasu
             EMULATOR_PORT=5554 # Weryfikacja portu 
+            SLEEP_STEP=10
             
-            # POPRAWIONA SKŁADNIA PĘTLI WHILE: 
-            # Sprawdzanie wartości 'sys.boot_completed' co 10 sekund aż do osiągnięcia wartości '1'.
-            while do
-              if; then
-                echo "ERROR: Failed to boot Android OS within secondary timeout ($MAX_WAIT seconds)."
-                exit 1
+              device_ready() {
+            adb devices 2>/dev/null | awk 'NR>1 && $2=="device"' | grep -q "emulator-$EMULATOR_PORT"
+            }
+            
+              while true; do
+              # jeżeli przekroczono max czas -> error
+              if [ "$ELAPSED_TIME" -ge "$MAX_WAIT" ]; then
+              echo "ERROR: Failed to boot Android OS within timeout ($MAX_WAIT seconds)."
+              exit 1
               fi
-              echo "Waiting for full boot. Elapsed: $ELAPSED_TIME seconds."
-              sleep 10
-              ELAPSED_TIME=$((ELAPSED_TIME + 10))
+
+            # jeśli urządzenie nie jest jeszcze widoczne w adb — poczekaj
+            if ! device_ready; then
+            echo "Emulator emulator-$EMULATOR_PORT not visible to adb yet. Elapsed: $ELAPSED_TIME s."
+              sleep "$SLEEP_STEP"
+              ELAPSED_TIME=$((ELAPSED_TIME + SLEEP_STEP))
+              continue
+              fi
+
+            # pobierz właściwość sys.boot_completed (usuń CR)
+            BOOT=$(adb -s "emulator-$EMULATOR_PORT" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r\n')
+
+            if [ "$BOOT" = "1" ]; then
+            echo "Device booted successfully after $ELAPSED_TIME seconds."
+            break
+            fi
+
+          echo "Waiting for full boot. sys.boot_completed='$BOOT'. Elapsed: $ELAPSED_TIME seconds."
+            sleep "$SLEEP_STEP"
+            ELAPSED_TIME=$((ELAPSED_TIME + SLEEP_STEP))
             done
             
             echo "Device fully booted and ready. Running tests..."
