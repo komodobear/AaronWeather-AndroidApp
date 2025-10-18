@@ -7,6 +7,7 @@ on:
 jobs:
   ui-tests:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,7 +38,7 @@ jobs:
       - name: Assemble app and androidTest
         run: ./gradlew --no-daemon --stacktrace :app:assembleDebug :app:assembleAndroidTest
 
-      - name: Run Android Emulator
+      - name: Run UI tests on emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -45,23 +46,26 @@ jobs:
           arch: x86_64
           force-avd-creation: true
           disable-animations: true
-          emulator-options: -no-window -no-snapshot -no-boot-anim -camera-back none -camera-front none -gpu swiftshader_indirect -noaudio -qemu -m 2048
-          script: ./gradlew --no-daemon --stacktrace :app:connectedDebugAndroidTest
+          emulator-options: -no-window -no-snapshot -no-boot-anim -camera-back none -camera-front none -gpu swiftshader_indirect -accel off
+          script: |
+            adb start-server
+            adb devices
+            ./gradlew --no-daemon --stacktrace :app:assembleDebug :app:assembleAndroidTest
+            ./gradlew --no-daemon --stacktrace :app:connectedDebugAndroidTest
 
-      - name: Run Instrumentation Tests
-        run: ./gradlew connectedDebugAndroidTest --no-daemon --stacktrace
-
-      - name: Dump logcat
+      - name: Collect reports
         if: always()
-        run: adb logcat -d > logcat.txt || true
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-ui-test-reports
-          path: |
-            app/build/reports/androidTests/connected/**
-            app/build/outputs/androidTest-results/connected/**
-            logcat.txt
-            retention-days: 7
+        run: |
+          mkdir -p artifacts
+          cp -R app/build/reports/androidTests/connected artifacts/reports || true
+          cp -R app/build/outputs/androidTest-results/connected artifacts/results || true
+          adb logcat -d > artifacts/logcat.txt || true
+          
+          - name: Upload artifacts
+            if: always()
+            uses: actions/upload-artifact@v4
+            with:
+              name: android-ui-test-reports
+              path: artifacts
+              retention-days: 7
+      
