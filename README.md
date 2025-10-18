@@ -42,6 +42,11 @@ Created to showcase my skills in Android development
 - End-to-end: full weather flow with MockWebServer
 - Tools: Kotlin, Compose, Hilt, MockK, Retrofit
 
+## CI
+
+- Fully integrated with GitHub Actions for continuous integration
+- Runs unit, instrumentation, and end-to-end tests on every push to `main`
+
 ## Download
 
 [Download Aaron Weather APK](https://github.com/komodobear/AaronWeather-AndroidApp/releases/latest)
