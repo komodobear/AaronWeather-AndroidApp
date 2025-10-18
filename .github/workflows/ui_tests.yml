@@ -49,7 +49,7 @@ jobs:
             
             # POPRAWIONA SKŁADNIA PĘTLI WHILE: 
             # Sprawdzanie wartości 'sys.boot_completed' co 10 sekund aż do osiągnięcia wartości '1'.
-            while; do
+            while do
               if; then
                 echo "ERROR: Failed to boot Android OS within secondary timeout ($MAX_WAIT seconds)."
                 exit 1
