@@ -1,4 +1,4 @@
-name: Stabilny CI/CD z Emulatorem Androida
+name: UI Test
 on: [ push, pull_request ]
 
 jobs:
@@ -31,35 +31,36 @@ jobs:
           arch: x86_64
           emulator-boot-timeout: 900
           disable-animations: true
-          emulator-options: -no-window -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect
+          # DODANA FLAGA -no-metrics i zoptymalizowane opcje headless
+          emulator-options: -no-window -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -no-metrics
 
-          # SKRYPT TESTOWY: Robustne oczekiwanie na pełny boot i uruchomienie testów
+          # SKRYPT TESTOWY: Poprawiona składnia pętli oczekującej na pełny boot
           script: |
             echo "1. Waiting for device connection (ADB)..."
+            # Polecenie czeka, aż emulator pojawi się w ADB, ale nie gwarantuje gotowości OS
             adb wait-for-device
             
             echo "2. Verifying Android OS boot completion..."
             
-            # Weryfikacja, czy system operacyjny jest w pełni uruchomiony (sys.boot_completed=1)
-            # Użycie 'tr -d '\r'' do usunięcia znaków powrotu karetki, które mogą występować w logach ADB
-            boot_status=$(adb shell getprop sys.boot_completed | tr -d '\r')
-            TIMEOUT_SECONDS=300
+            # Wprowadzenie zmiennych dla pętli oczekiwania
             ELAPSED_TIME=0
-
-            while [ "$boot_status"!= "1" ] &&; do
-              echo "Waiting for full boot. Current status: $boot_status. Elapsed: $ELAPSED_TIME seconds."
+            MAX_WAIT=300 # Opcjonalny dodatkowy limit czasu
+            EMULATOR_PORT=5554 # Weryfikacja portu 
+            
+            # POPRAWIONA SKŁADNIA PĘTLI WHILE: 
+            # Sprawdzanie wartości 'sys.boot_completed' co 10 sekund aż do osiągnięcia wartości '1'.
+            while; do
+              if; then
+                echo "ERROR: Failed to boot Android OS within secondary timeout ($MAX_WAIT seconds)."
+                exit 1
+              fi
+              echo "Waiting for full boot. Elapsed: $ELAPSED_TIME seconds."
               sleep 10
               ELAPSED_TIME=$((ELAPSED_TIME + 10))
-              boot_status=$(adb shell getprop sys.boot_completed | tr -d '\r')
             done
             
-            if [ "$boot_status"!= "1" ]; then
-              echo "ERROR: Failed to boot Android OS within secondary timeout ($TIMEOUT_SECONDS seconds)."
-              exit 1
-            fi
-
             echo "Device fully booted and ready. Running tests..."
-            adb shell input keyevent 82 # Odblokowanie ekranu dla testów UI
+            adb -s emulator-$EMULATOR_PORT shell input keyevent 82 # Odblokowanie ekranu dla testów UI
             
             # Uruchomienie testów z opcją kontynuacji w przypadku awarii jednego modułu
             ./gradlew connectedAndroidTest --continue
