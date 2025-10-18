@@ -1,95 +1,72 @@
-name: Run Instrumentation Tests
-
-on:
-  push:
-    branches:
-      - test
+name: Stabilny CI/CD z Emulatorem Androida
+on: [ push, pull_request ]
 
 jobs:
-  ui-tests:
+  connected_tests:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          java-version: 17
+          distribution: 'adopt'
           cache: 'gradle'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Load API key into local.properties
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-        run: echo API_KEY=$API_KEY > local.properties
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: wrapper
-
-      - name: Fetch dependencies
-        run: ./gradlew --no-daemon --stacktrace buildEnvironment
-
-      - name: Assemble app and androidTest
-        run: ./gradlew --no-daemon --stacktrace :app:assembleDebug :app:assembleAndroidTest
-
-      - name: Enable KVM group perms
+      # KROK KRYTYCZNY: Konfiguracja uprawnień KVM dla akceleracji
+      - name: Enable KVM group perms (REQUIRED for fast Linux Emulation)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run UI tests on emulator
+      - name: Run Android Instrumented Tests on Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 33
           target: google_apis
           arch: x86_64
-          profile: pixel_4
-          force-avd-creation: true
+          emulator-boot-timeout: 900
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-audio -no-snapshot -camera-back none -camera-front none -partition-size 2048
-          disable-avd-cache: false
+          emulator-options: -no-window -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect
+
+          # SKRYPT TESTOWY: Robustne oczekiwanie na pełny boot i uruchomienie testów
           script: |
-            echo "Waiting for emulator to be ready..."
+            echo "1. Waiting for device connection (ADB)..."
             adb wait-for-device
-            echo "Emulator is running"
             
-            # Wait for boot completion
-            while [ "`adb shell getprop sys.boot_completed | tr -d '\r' `" != "1" ] ; do
-              echo "Waiting for boot completion..."
-              sleep 5
+            echo "2. Verifying Android OS boot completion..."
+            
+            # Weryfikacja, czy system operacyjny jest w pełni uruchomiony (sys.boot_completed=1)
+            # Użycie 'tr -d '\r'' do usunięcia znaków powrotu karetki, które mogą występować w logach ADB
+            boot_status=$(adb shell getprop sys.boot_completed | tr -d '\r')
+            TIMEOUT_SECONDS=300
+            ELAPSED_TIME=0
+
+            while [ "$boot_status"!= "1" ] &&; do
+              echo "Waiting for full boot. Current status: $boot_status. Elapsed: $ELAPSED_TIME seconds."
+              sleep 10
+              ELAPSED_TIME=$((ELAPSED_TIME + 10))
+              boot_status=$(adb shell getprop sys.boot_completed | tr -d '\r')
             done
             
-            echo "Device is fully booted"
-            adb devices
-            adb shell settings put global window_animation_scale 0.0
-            adb shell settings put global transition_animation_scale 0.0
-            adb shell settings put global animator_duration_scale 0.0
+            if [ "$boot_status"!= "1" ]; then
+              echo "ERROR: Failed to boot Android OS within secondary timeout ($TIMEOUT_SECONDS seconds)."
+              exit 1
+            fi
+
+            echo "Device fully booted and ready. Running tests..."
+            adb shell input keyevent 82 # Odblokowanie ekranu dla testów UI
             
-            ./gradlew --no-daemon --stacktrace :app:connectedDebugAndroidTest
+            # Uruchomienie testów z opcją kontynuacji w przypadku awarii jednego modułu
+            ./gradlew connectedAndroidTest --continue
 
-      - name: Collect reports
-        if: always()
-        run: |
-          mkdir -p artifacts
-          cp -R app/build/reports/androidTests/connected artifacts/reports || true
-          cp -R app/build/outputs/androidTest-results/connected artifacts/results || true
-          adb logcat -d > artifacts/logcat.txt || true
-
-      - name: Upload artifacts
+      - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: android-ui-test-reports
-          path: artifacts
-          retention-days: 7
+          name: android-test-report
+          path: '**/build/reports/androidTests/connected/'
