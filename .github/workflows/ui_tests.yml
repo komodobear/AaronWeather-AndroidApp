@@ -3,92 +3,19 @@ on: [ push, pull_request ]
 
 jobs:
   connected_tests:
-    runs-on: ubuntu-latest
-
+    runs-on: macos-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Checkout the code
+        uses: actions/checkout@v2
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: 17
-          distribution: 'adopt'
-          cache: 'gradle'
-
-      # KROK KRYTYCZNY: Konfiguracja uprawnień KVM dla akceleracji
-      - name: Enable KVM group perms (REQUIRED for fast Linux Emulation)
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Run Android Instrumented Tests on Emulator
+      - name: Run espresso tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          emulator-boot-timeout: 900
-          disable-animations: true
-          # DODANA FLAGA -no-metrics i zoptymalizowane opcje headless
-          emulator-options: -no-window -no-boot-anim -no-snapshot-save -gpu swiftshader_indirect -no-metrics
+          api-level: 29
+          script: ./gradlew connectedCheck
 
-          # SKRYPT TESTOWY: Poprawiona składnia pętli oczekującej na pełny boot
-          script: |
-            echo "1. Waiting for device connection (ADB)..."
-            # Polecenie czeka, aż emulator pojawi się w ADB, ale nie gwarantuje gotowości OS
-            adb wait-for-device
-            
-            echo "2. Verifying Android OS boot completion..."
-            
-            # Wprowadzenie zmiennych dla pętli oczekiwania
-            ELAPSED_TIME=0
-            MAX_WAIT=300 # Opcjonalny dodatkowy limit czasu
-            EMULATOR_PORT=5554 # Weryfikacja portu 
-            SLEEP_STEP=10
-            
-              device_ready() {
-            adb devices 2>/dev/null | awk 'NR>1 && $2=="device"' | grep -q "emulator-$EMULATOR_PORT"
-            }
-            
-              while true; do
-              # jeżeli przekroczono max czas -> error
-              if [ "$ELAPSED_TIME" -ge "$MAX_WAIT" ]; then
-              echo "ERROR: Failed to boot Android OS within timeout ($MAX_WAIT seconds)."
-              exit 1
-              fi
-
-            # jeśli urządzenie nie jest jeszcze widoczne w adb — poczekaj
-            if ! device_ready; then
-            echo "Emulator emulator-$EMULATOR_PORT not visible to adb yet. Elapsed: $ELAPSED_TIME s."
-              sleep "$SLEEP_STEP"
-              ELAPSED_TIME=$((ELAPSED_TIME + SLEEP_STEP))
-              continue
-              fi
-
-            # pobierz właściwość sys.boot_completed (usuń CR)
-            BOOT=$(adb -s "emulator-$EMULATOR_PORT" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r\n')
-
-            if [ "$BOOT" = "1" ]; then
-            echo "Device booted successfully after $ELAPSED_TIME seconds."
-            break
-            fi
-
-          echo "Waiting for full boot. sys.boot_completed='$BOOT'. Elapsed: $ELAPSED_TIME seconds."
-            sleep "$SLEEP_STEP"
-            ELAPSED_TIME=$((ELAPSED_TIME + SLEEP_STEP))
-            done
-            
-            echo "Device fully booted and ready. Running tests..."
-            adb -s emulator-$EMULATOR_PORT shell input keyevent 82 # Odblokowanie ekranu dla testów UI
-            
-            # Uruchomienie testów z opcją kontynuacji w przypadku awarii jednego modułu
-            ./gradlew connectedAndroidTest --continue
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Upload test report
+        uses: actions/upload-artifact@v2
         with:
-          name: android-test-report
-          path: '**/build/reports/androidTests/connected/'
+          name: instrumentation_test_report
+          path: app/build/reports/androidTests/connected/
