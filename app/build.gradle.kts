@@ -21,27 +21,12 @@ android {
 
 		testInstrumentationRunner = "com.komodobear.aaronweather.e2e.TestHiltApp"
 
-		val apiKey = System.getenv("API_KEY") ?: run {
-			val localProperties = project.rootProject.file("local.properties")
-			if (localProperties.exists()) {
-				val properties = Properties().apply {
-					load(localProperties.inputStream())
-				}
-				properties.getProperty("API_KEY")
-			} else {
-				// Zapewnia, że build nie zakończy się błędem, nawet jeśli nie ma klucza
-				"no_api_key_found"
-			}
-		}
+		val properties = Properties()
+		properties.load(rootProject.file("local.properties").inputStream())
+		val apiKey = properties.getProperty("API_KEY") ?: ""
 
-		val localProperties = project.rootProject.file("local.properties")
-		if(localProperties.exists()) {
-			val properties = Properties().apply {
-				load(localProperties.inputStream())
-			}
+		buildConfigField("String", "API_KEY", "\"$apiKey\"")
 
-			buildConfigField("String", "API_KEY", "\"$apiKey\"")
-		}
 	}
 
 	testOptions {
