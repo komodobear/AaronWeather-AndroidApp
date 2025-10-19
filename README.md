@@ -42,10 +42,11 @@ Created to showcase my skills in Android development
 - End-to-end: full weather flow with MockWebServer
 - Tools: Kotlin, Compose, Hilt, MockK, Retrofit
 
-## CI
+## CI/CD
 
 - Fully integrated with GitHub Actions for continuous integration
 - Runs unit, instrumentation, and end-to-end tests on every push to `main`
+- Creates a new release with the generated signed APK whenever a new tag is pushed
 
 ## Download
 
