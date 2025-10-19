@@ -46,6 +46,7 @@ jobs:
                                 --keystorealias $KEYSTOREALIAS \
                                 --keystorealiaspass "$KEYSTOREALIAS_PASS" \
                                 --androidreleasetype APK
+
       - name: Release with Notes
         uses: softprops/action-gh-release@v1
         with:
