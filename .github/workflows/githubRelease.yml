@@ -1,56 +1,53 @@
-name: Build and publish APK
+name: Publish release APK
 
 on:
   push:
     tags:
-      - "*"
+      - '*'
+  workflow_dispatch:
 
 jobs:
-  build-release-apk:
-    runs-on: ubuntu-24.04
+  package-release-apk:
+    name: Generate release APK
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Setup Java
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '17'
+          cache: 'gradle'
 
-      - name: Install Ionic and Capacitor dependencies
-        run: npm install -g @ionic/cli @capacitor/core @capacitor/cli
+      - name: Generate signed APK
+        run: ./gradlew assembleRelease --stacktrace
 
-      - name: Install app dependencies
-        run: |
-          npm install
-          npm run build
-
-      - name: Build Ionic app
-        env:
-          KEYSTOREALIAS_PASS: ${{ secrets.KEY_PASSWORD }}
-          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEYSTOREALIAS: ${{ secrets.KEY_ALIAS }}
-          KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          echo "$KEYSTORE" | base64 --decode > android/official.jks
-          npx cap sync
-          npx cap build android --keystorepath official.jks \
-                                --keystorepass "$KEYSTORE_PASS" \
-                                --keystorealias $KEYSTOREALIAS \
-                                --keystorealiaspass "$KEYSTOREALIAS_PASS" \
-                                --androidreleasetype APK
-
-      - name: Release with Notes
-        uses: softprops/action-gh-release@v1
+      - name: Sign APK with keystore
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
         with:
-          tag_name: ${{ github.ref_name }}
-          token: ${{ secrets.TOKEN }}
-          files: |
-            android/app/build/outputs/apk/release/app-release-signed.apk
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "30.0.2"
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release.apk
+          path: ${{steps.sign_app.outputs.signedReleaseFile}}
+
+      - name: Echo APK
+        run: echo Signed APK FILE ${{steps.sign_app.outputs.signedReleaseFile}}
+
+      - name: Release signed APK
+        uses: MicahSphelele/action-publish-signed-apk@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          APP_FOLDER: app
+          FILE_DIR: ${{steps.sign_app.outputs.signedReleaseFile}}
