@@ -45,6 +45,7 @@ jobs:
       - name: Echo APK
         run: echo Signed APK FILE ${{steps.sign_app.outputs.signedReleaseFile}}
 
+
       - name: Release signed APK
         uses: MicahSphelele/action-publish-signed-apk@main
         env:
