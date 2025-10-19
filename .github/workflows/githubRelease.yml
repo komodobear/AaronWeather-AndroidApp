@@ -36,6 +36,18 @@ jobs:
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x gradlew
 
+      - name: Get changelog
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          echo "Last tag: $LAST_TAG"
+          # Generowanie listy commitów od ostatniego tagu
+          CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s")
+          echo "$CHANGELOG"
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Decode Android keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -45,8 +57,8 @@ jobs:
       - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS:        ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD:     ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file="$PWD/release.keystore" \
@@ -61,7 +73,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          release_name: Aaron Weather
+          body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
 
@@ -72,5 +85,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: app/build/outputs/apk/release/app-release.apk
-          asset_name: app-release.apk
+          asset_name: AaronWeather.apk
           asset_content_type: application/vnd.android.package-archive
