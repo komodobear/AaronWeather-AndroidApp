@@ -44,7 +44,7 @@ Created to showcase my skills in Android development
 
 ## CI/CD
 
-- Fully integrated with GitHub Actions for continuous integration
+- Fully integrated with GitHub Actions for continuous integration and continuous deployment
 - Runs unit, instrumentation, and end-to-end tests on every push to `main`
 - Creates a new release with the generated signed APK whenever a new tag is pushed
 
